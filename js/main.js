@@ -17,11 +17,11 @@ function candyBins(dataset, candy) {
         if (keys.indexOf(datum)>=0) {
             for (var j = 0; j<bin.length; j++) {
                 if (bin[j].key == datum) {
-                    bin[j].value = bin[j].value +1;
+                    bin[j].value.push(dataset[i]);
                 }
             }
         } else {
-            bin.push({key: datum, value: 1});
+            bin.push({key: datum, value: [dataset[i]]});
             keys.push(datum);
         }
     }
