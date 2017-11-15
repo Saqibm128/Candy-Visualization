@@ -32,12 +32,13 @@ d3.csv('./data/candy.csv',
 function(row){
 
     return {
+        // Demographics
         Q1_GOING_OUT: cleanData(row.Q1_GOING_OUT),
         Q2_GENDER: cleanData(row.Q2_GENDER),
-        Q3_AGE: cleanData(row.Q3_AGE),
+        Q3_AGE: +cleanData(row.Q3_AGE),
         Q4_COUNTRY: cleanData(row.Q4_COUNTRY),
         Q5_STATE_PROVINCE_COUNTY_ETC: cleanData(row.Q5_STATE_PROVINCE_COUNTY_ETC),
-        
+        // Candies
         Q6_Any_full_sized_candy_bar: cleanData(row.Q6_Any_full_sized_candy_bar),
         Q6_Butterfinger: cleanData(row.Q6_Butterfinger),
         Q6_Candy_Corn: cleanData(row.Q6_Candy_Corn),
@@ -86,6 +87,7 @@ function(row){
         Q6_Twix: cleanData(row.Q6_Twix),
         Q6_Whatchamacallit_Bars: cleanData(row.Q6_Whatchamacallit_Bars),
         Q6_York_Peppermint_Patties: cleanData(row.Q6_York_Peppermint_Patties),
+        // Other, unstructured comments
         Q7_JOY_OTHER: cleanData(row.Q7_JOY_OTHER),
         Q8_DESPAIR_OTHER: cleanData(row.Q8_DESPAIR_OTHER),
         Q9_OTHER_COMMENTS: cleanData(row.Q9_OTHER_COMMENTS)
