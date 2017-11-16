@@ -99,60 +99,35 @@ function(error, dataset){
         console.error(error);
         return;
     }
-//CandyFrequencies
-    var fullCandyBar = candyBins(dataset, 'Q6_Any_full_sized_candy_bar');
-    var butterFinger = candyBins(dataset, 'Q6_Butterfinger');
-    var candyCorn = candyBins(dataset, 'Q6_Candy_Corn');
-    var chiclets = candyBins(dataset, 'Q6_Chiclets');
-    var dots = candyBins(dataset, 'Q6_Dots');
-    var fuzzyPeaches = candyBins(dataset, 'Q6_Fuzzy_Peaches');
-    var goodPlenty = candyBins(dataset, 'Q6_Good_N_Plenty');
-    var gummyBears = candyBins(dataset, 'Q6_Gummy_Bears_straight_up');
-    var healthyFruit = candyBins(dataset, 'Q6_Healthy_Fruit');
-    var heathBar = candyBins(dataset, 'Q6_Heath_Bar');
-    var darkChoco = candyBins(dataset, 'Q6_Hershey_s_Dark_Chocolate');
-    var darkMilk = candyBins(dataset, 'Q6_Hershey_s_Milk_Chocolate');
-    var hersheyKiss = candyBins(dataset, 'Q6_Hershey_s_Kisses');
-    var jollyRancherBad = candyBins(dataset, 'Q6_Jolly_Rancher_bad_flavor');
-    var jollyRancherGood = candyBins(dataset, 'Q6_Jolly_Rancher_good_flavor');
-    var juniorMint = candyBins(dataset, 'Q6_Junior_Mints');
-    var kitKat = candyBins(dataset, 'Q6_Kit_Kat');
-    var laffyTaffy = candyBins(dataset, 'Q6_LaffyTaffy');
-    var lemonHeads = candyBins(dataset, 'Q6_LemonHeads');
-    var licorice = candyBins(dataset, 'Q6_Licorice_not_black');
-    var licoriceBlack = candyBins(dataset, 'Q6_Licorice_yes_black');
-    var lollipop = candyBins(dataset, 'Q6_Lollipops');
-    var mikeIke = candyBins(dataset, 'Q6_Mike_and_Ike');
-    var milkDuds = candyBins(dataset, 'Q6_Milk_Duds');
-    var milkyWay = candyBins(dataset, 'Q6_Milky_Way');
-    var mMReg = candyBins(dataset, 'Q6_Regular_M_Ms');
-    var mMPeanut = candyBins(dataset, 'Q6_Peanut_M_M_s');
-    var mintKiss = candyBins(dataset, 'Q6_Mint_Kisses');
-    var mrGoodbar = candyBins(dataset, 'Q6_Mr_Goodbar');
-    var nerds = candyBins(dataset, 'Q6_Nerds');
-    var nestleCrunch = candyBins(dataset, 'Q6_Nestle_Crunch');
-    var peeps = candyBins(dataset, 'Q6_Peeps');
-    var pixyStix = candyBins(dataset, 'Q6_Pixy_Stix');
-    var reecesCup= candyBins(dataset, 'Q6_Reese_s_Peanut_Butter_Cups');
-    var reesesPieces = candyBins(dataset, 'Q6_Reese_s_Pieces');
-    var rolos = candyBins(dataset, 'Q6_Rolos');
-    var skittles = candyBins(dataset, 'Q6_Skittles');
-    var snickers = candyBins(dataset, 'Q6_Snickers');
-    var sourpatch= candyBins(dataset, 'Q6_Sourpatch_Kids_i_e_abominations_of_nature');
-    var starburst = candyBins(dataset, 'Q6_Starburst');
-    var swedishFish = candyBins(dataset, 'Q6_Swedish_Fish');
-    var ticTac = candyBins(dataset, 'Q6_Tic_Tacs');
-    var threeMusk = candyBins(dataset, 'Q6_Three_Musketeers');
-    var tolberone = candyBins(dataset, 'Q6_Tolberone_something_or_other');
-    var trailMix = candyBins(dataset, 'Q6_Trail_Mix');
-    var twix = candyBins(dataset, 'Q6_Twix');
-    var whatcha = candyBins(dataset, 'Q6_Whatchamacallit_Bars');
-    var yorkPeppermint = candyBins(dataset, 'Q6_York_Peppermint_Patties');
 
-//DEMOGRAPHICS
-    var goingOut = candyBins(dataset, 'Q1_GOING_OUT');
-    var gender = candyBins(dataset, 'Q2_GENDER');
-    var age = candyBins(dataset, 'Q3_AGE');
-    var country = candyBins(dataset, 'Q4_COUNTRY');
-    var provinceState = candyBins(dataset, 'Q5_STATE_PROVINCE_COUNTY_ETC');
-});
+    var candyObject = new Object();
+    Object.keys(dataset[0]).forEach(function(key) {
+      candyObject[key] = candyBins(dataset, key);
+    })
+    console.log(candyObject)
+  }
+);
+//     var map;
+//   var service;
+//   var infowindow;
+//   function initialize() {
+//     var pyrmont = new google.maps.LatLng(0,0);
+// 
+// 
+//     map = new google.maps.Map(document.getElementById('map'), {
+//         center: pyrmont,
+//         zoom: 15
+//       });
+// 
+//     var request = {
+//       bounds: pyrmont,
+//       query: ['OH']
+//     };
+// 
+//     service = new google.maps.places.PlacesService(map);
+//     service.textSearch(request, function(resp) {
+//       console.log(resp);
+//     });
+//   }
+//   initialize()
+// });
