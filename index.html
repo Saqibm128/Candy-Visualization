@@ -2,11 +2,23 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
     <div id="main">
-        <svg width="1420" height="720" style="border: 1px solid #777;">
-        </svg>
+        <div style="margin-left: 160px;">
+            <svg width="710" height="360" style="border: 1px solid #777;">
+            </svg>
+        </div>
+        <div style="margin-left: 380px;">
+            <label for="categorySelect">X Scale:</label>
+            <select class="custom-select small" id="xScaleSelect" onchange="onXScaleChanged()">
+              <option selected value="Age (year)">Age (year)</option>
+              <option value="Gender">Gender</option>
+              <option value="Country">Country</option>
+              <option value="Dating Status">Dating Status</option>
+            </select>
+        </div>
     </div>
 </body>
 <script src="https://d3js.org/d3.v4.min.js"></script>
