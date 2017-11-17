@@ -153,7 +153,9 @@ d3.csv('./data/candy.csv',
     });
     state = candyBins(dataset, 'Q5_STATE_PROVINCE_COUNTY_ETC');
     chartG.append('g')
-      .attr('class', 'x-axis');
+      .attr('class', 'x')
+      .append('g')
+      .attr('class', 'x axis');
 
     updateChart(age);
   });
@@ -165,7 +167,7 @@ function updateChart(currArray) {
     .range([0, 3 * height / 4])
   var yAxis = d3.axisLeft(yScale).ticks(8);
   var xAxis = defineXAxis(currArray);
-  chartG.selectAll('g.x-axis')
+  chartG.selectAll('g.x.axis')
     .attr('transform', 'translate(0,' + ((3 * height / 4) + 10) + ')')
     .call(xAxis);
 
@@ -173,7 +175,7 @@ function updateChart(currArray) {
   var binWidth = xScale(.8) - xScale(0);
   var num = Math.ceil(binWidth / (rectWidth + 2));
 
-  var xlabel = chartG.selectAll('.xLabels')
+  var xlabel = chartG.select(".x").selectAll('.xLabels')
     .data(xScaleLabels);
     
   var enteredXlabel = xlabel.enter().append('text');
@@ -198,7 +200,17 @@ function updateChart(currArray) {
     .attr("class", "people")
     .on("mouseover", function(d) {
       console.log(d);
-    });;
+      d3.select(this)
+      .transition()
+      .attr("width", rectWidth*3)
+      .attr("height", rectWidth*3)
+    })
+    .on("mouseout", function(d) {
+      d3.select(this)
+      .transition()
+      .attr("width", rectWidth)
+      .attr("height", rectWidth)
+    });
     ppl.merge(enteredPpl).transition().attr("x", function(d, i) {
         return xScale(j) - binWidth / 2 + ((rectWidth + 2) * (i % num));
       })
