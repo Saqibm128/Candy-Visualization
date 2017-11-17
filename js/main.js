@@ -122,10 +122,11 @@ function defineColor() {
 
 //////DATASET
 d3.csv('./data/candy.csv',
-  function(row) {
+  function(row, i) {
     var cleaned = {}
     Object.keys(row).forEach(function(keyName) {
       cleaned[keyName] = cleanData(row[keyName])
+      cleaned.identifier = i
     })
     return cleaned
   },
@@ -172,26 +173,33 @@ function updateChart(currArray) {
   var binWidth = xScale(.8) - xScale(0);
   var num = Math.ceil(binWidth / (rectWidth + 2));
 
-  chartG.selectAll('xLabels')
-    .data(xScaleLabels)
-    .enter()
-    .append('text')
-    .attr('x', function(d, i) {
+  var xlabel = chartG.selectAll('.xLabels')
+    .data(xScaleLabels);
+    
+  var enteredXlabel = xlabel.enter().append('text');
+  xlabel.merge(enteredXlabel).attr('x', function(d, i) {
       return xScale(i);
     })
+    .attr('class', 'xLabels')
     .attr('y', ((3 * height / 4) + 24))
     .attr('font-size', '9')
     .attr('text-anchor', 'middle')
     .text(function(d) {
       return d;
-    })
-
+    });
+  xlabel.exit().remove();
   for (var j = 0; j < currArray.length; j++) {
-    var ppl = chartG.selectAll("people")
-      .data(currArray[j].values)
-      .enter()
-    ppl.append("rect")
-      .attr("x", function(d, i) {
+    var ppl = chartG.selectAll(".people")
+      .data(currArray[j].values, function(d) {
+        return d.identifier;
+      });
+    var enteredPpl = ppl.enter()
+    .append("rect")
+    .attr("class", "people")
+    .on("mouseover", function(d) {
+      console.log(d);
+    });;
+    ppl.merge(enteredPpl).transition().attr("x", function(d, i) {
         return xScale(j) - binWidth / 2 + ((rectWidth + 2) * (i % num));
       })
       .attr("y", function(d, i) {
@@ -201,9 +209,6 @@ function updateChart(currArray) {
       .attr("height", (rectWidth))
       .attr('fill', function(d, i) {
         return '#0000ff';
-      })
-      .on("mouseover", function(d) {
-        console.log(d);
       });
   }
 }
