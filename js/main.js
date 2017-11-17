@@ -1,7 +1,19 @@
+///////VARIABLES
 var svg = d3.select('svg');
 var height = svg.attr('height');
 var width = svg.attr('width');
+var people = svg.append('g').attr('class', 'people');
+///CHART1
+    var chartG = svg.append('g')
+        .attr('transform', 'translate('+[width/20,height/10]+')');
+    var gender = [];
+    var goingOut = [];
+    var age = [];
+    var country = [];
+    var state = [];
+    var xScaleLabels = [];
 
+//////FUNCTIONS
 function cleanData(string) {
     if (string == "") {
         return -1;
@@ -27,7 +39,6 @@ function candyBins(dataset, candy) {
     }
     return bin;
 }
-
 function ageBins(dataset) {
     var bin = [];
     var keys = [];
@@ -47,7 +58,56 @@ function ageBins(dataset) {
     }
     return bin;
 }
+function onXScaleChanged() {
+    var select = d3.select('#xScaleSelect').node();
+    var value = select.options[select.selectedIndex].value;
+    var currArray =[];
+    if (value == "age") {
+        currArray = age;
+    } else if (value == "gender") {
+        currArray = gender;
+    } else if (value == "country") {
+        currArray = country;
+    } else {
+        currArray = goingOut;
+    }
+    updateXLabel(currArray);
+    updateChart(currArray);
+}
+function updateXLabel(currArray) {
+    xScaleLabels = [];
+    if (currArray == age){
+        for (var i =0;i<currArray.length;i++) {
+            if (currArray[i].key != -1) {
+                xScaleLabels.push((currArray[i].key*10)+' - '+((currArray[i].key*10)+10));
+            } else {
+                xScaleLabels.push("Unknown");
+            }
+        }
+    } else {
+        for (var i =0;i<currArray.length;i++) {
+            xScaleLabels.push(currArray[i].key);
+        }
+    }
+}
+function defineXAxis(bins) {
+    xScale = d3.scaleLinear()
+        .domain([-1,bins.length])
+        .range([0,9*width/10])
+    var numberTicks = 10;
+    if (bins.length < 10) {
+        numberTicks = bins.length;
+    }
+    return d3.axisBottom(xScale).ticks(numberTicks);
+}
+function defineSorter() {
 
+}
+function defineColor() {
+
+}
+
+//////DATASET
 d3.csv('./data/candy.csv',
 function(row){
 
@@ -168,60 +228,56 @@ function(error, dataset){
     var twix = candyBins(dataset, 'Q6_Twix');
     var whatcha = candyBins(dataset, 'Q6_Whatchamacallit_Bars');
     var yorkPeppermint = candyBins(dataset, 'Q6_York_Peppermint_Patties');
-function defineXAxis(bins) {
-    xScale = d3.scaleLinear()
-        .domain([-1,bins.length])
-        .range([0,9*width/10])
-    var numberTicks = 10;
-    if (bins.length < 10) {
-        numberTicks = bins.length;
-    }
-    return d3.axisBottom(xScale).ticks(numberTicks);
-}
-function defineSorter() {
 
-}
-function defineColor() {
-
-}
 //DEMOGRAPHICS;
-var gender = candyBins(dataset, 'Q2_GENDER');
-var goingOut = candyBins(dataset, 'Q1_GOING_OUT');
-var age = ageBins(dataset).sort(function(a,b) {return parseInt(a.key)>parseInt(b.key);});
-console.log(age);
-var country = candyBins(dataset,'Q4_COUNTRY');
-var state = candyBins(dataset,'Q5_STATE_PROVINCE_COUNTY_ETC');
-    var chartG = svg.append('g')
-        .attr('transform', 'translate('+[10,10]+')');
-//chart 1
+    gender = candyBins(dataset, 'Q2_GENDER');
+    goingOut = candyBins(dataset, 'Q1_GOING_OUT');
+    age = ageBins(dataset).sort(function(a,b) {return parseInt(a.key)>parseInt(b.key);});
+    country = candyBins(dataset,'Q4_COUNTRY').sort(function(a,b) {return a.key>b.key;}).sort(function(a,b) {return parseInt(a.values.length)<parseInt(b.values.length);});
+    state = candyBins(dataset,'Q5_STATE_PROVINCE_COUNTY_ETC');
+    chartG.append('g')
+        .attr('class', 'x-axis');
+
+    updateChart(age);
+});
+function updateChart(currArray) {
+    updateXLabel(currArray);
     var yScale = d3.scaleLinear()
         .domain([60,0])
         .range([0,3*height/4])
     var yAxis = d3.axisLeft(yScale).ticks(8);
-
-    var currArray = country;
     var xAxis = defineXAxis(currArray);
-    chartG.append('g')
-        .attr('class', 'x-axis')
+    chartG.selectAll('g.x-axis')
+        .attr('transform','translate(0,'+((3*height/4)+10)+')')
         .call(xAxis);
 
         var rectWidth = 3;
         var binWidth = xScale(.8)-xScale(0);
-        var num = Math.ceil(binWidth/(rectWidth+2))
+        var num = Math.ceil(binWidth/(rectWidth+2));
+
+    chartG.selectAll('xLabels')
+        .data(xScaleLabels)
+        .enter()
+        .append('text')
+        .attr('x', function(d,i){return xScale(i);})
+        .attr('y', ((3*height/4)+24))
+        .attr('font-size','9')
+        .attr('text-anchor', 'middle')
+        .text(function(d) {return d;})
+
     for (var j=0; j < currArray.length; j++) {
-        var row = 0;
-        var people = chartG.selectAll("people")
+        var ppl = chartG.selectAll("people")
             .data(currArray[j].values)
             .enter()
-        people.append("rect")
+        ppl.append("rect")
             .attr("x", function (d, i) {
                 return xScale(j)-binWidth/2+((rectWidth+2)*(i%num));
             })
             .attr("y", function (d, i) {
                 return yScale(Math.floor(i / num))+1;
             })
-            .attr("width", (rectWidth+1))
-            .attr("height", (rectWidth+1))
+            .attr("width", (rectWidth))
+            .attr("height", (rectWidth))
             .attr('fill', function(d,i) {
                 return '#0000ff';
             })
@@ -229,4 +285,4 @@ var state = candyBins(dataset,'Q5_STATE_PROVINCE_COUNTY_ETC');
                 console.log(d);
             });
         }
-});
+    }

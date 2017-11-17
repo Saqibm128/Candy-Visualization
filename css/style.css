@@ -8,3 +8,6 @@ body {
 .y-axis line, path {
 	opacity: 0;
 }
+.x-axis text {
+	opacity: 0;
+}
