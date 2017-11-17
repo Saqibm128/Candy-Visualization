@@ -16,7 +16,7 @@ var yScale;
 var num;
 var rectWidth = 3;
 var binWidth;
-
+var colors = {Male: '#4e4ef8', Female: '#fb7676', Unknown: '#25f625', NONE: '#00cccc'};
 
 //////FUNCTIONS
 function cleanData(string) {
@@ -89,6 +89,12 @@ function onXScaleChanged() {
   updateChart(currArray);
 }
 
+function onColorChanged() {
+  var select = d3.select('#colorSelect').node();
+  var value = select.options[select.selectedIndex].value;
+  defineColor(value);
+}
+
 function updateXLabel(currArray) {
   xScaleLabels = [];
   
@@ -112,7 +118,6 @@ function updateXLabel(currArray) {
   binWidth = xScale(.8) - xScale(0);
   num = Math.ceil(binWidth / (rectWidth + 2));
   yScale = d3.scaleLinear().domain([d3.max(currArray, function(d) {
-    console.log(d)
     return d.values.length / num
   }), 0])
   .range([0, height * 3/4])
@@ -133,8 +138,17 @@ function defineSorter() {
 
 }
 
-function defineColor() {
-
+function defineColor(key) {
+  d3.selectAll('rect')
+    .attr('fill', function(d, i) {
+      if (key == 'NONE') {
+        return colors[key];
+      } else if(colors[d[key]]==undefined) {
+        return colors['Unknown'];
+      } else {
+        return colors[d[key]];
+      }
+    })
 }
 
 //////DATASET
@@ -173,7 +187,11 @@ d3.csv('./data/candy.csv',
       .attr('class', 'x')
       .append('g')
       .attr('class', 'x axis');
+    
+    document.getElementById('xScaleSelect').value='age';
+    document.getElementById('colorSelect').value='NONE';
     updateChart(age);
+    defineColor('NONE');
   });
 
 function updateChart(currArray) {
@@ -233,9 +251,6 @@ function updateChart(currArray) {
         return yScale(Math.floor(i / num));
       })
       .attr("width", (rectWidth))
-      .attr("height", (rectWidth))
-      .attr('fill', function(d, i) {
-        return '#0000ff';
-      });
+      .attr("height", (rectWidth));
   }
 }
