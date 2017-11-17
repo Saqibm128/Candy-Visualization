@@ -237,6 +237,8 @@ function(error, dataset){
     state = candyBins(dataset,'Q5_STATE_PROVINCE_COUNTY_ETC');
     chartG.append('g')
         .attr('class', 'x-axis');
+    chartG.append('g')
+        .attr('class', 'x-label');
 
     updateChart(age);
 });
@@ -255,7 +257,7 @@ function updateChart(currArray) {
         var binWidth = xScale(.8)-xScale(0);
         var num = Math.ceil(binWidth/(rectWidth+2));
 
-    chartG.selectAll('xLabels')
+    chartG.selectAll('g.x-label')
         .data(xScaleLabels)
         .enter()
         .append('text')
