@@ -12,6 +12,11 @@ var age = [];
 var country = [];
 var state = [];
 var xScaleLabels = [];
+var yScale;
+var num;
+var rectWidth = 3;
+var binWidth;
+
 
 //////FUNCTIONS
 function cleanData(string) {
@@ -86,6 +91,7 @@ function onXScaleChanged() {
 
 function updateXLabel(currArray) {
   xScaleLabels = [];
+  
   if (currArray == age) {
     for (var i = 0; i < currArray.length; i++) {
       if (currArray[i].key != -1) {
@@ -103,6 +109,13 @@ function updateXLabel(currArray) {
       }
     }
   }
+  binWidth = xScale(.8) - xScale(0);
+  num = Math.ceil(binWidth / (rectWidth + 2));
+  yScale = d3.scaleLinear().domain([d3.max(currArray, function(d) {
+    console.log(d)
+    return d.values.length / num
+  }), 0])
+  .range([0, height * 3/4])
 }
 
 function defineXAxis(bins) {
@@ -160,24 +173,22 @@ d3.csv('./data/candy.csv',
       .attr('class', 'x')
       .append('g')
       .attr('class', 'x axis');
-
     updateChart(age);
   });
 
 function updateChart(currArray) {
-  updateXLabel(currArray);
-  var yScale = d3.scaleLinear()
-    .domain([60, 0])
-    .range([0, 3 * height / 4])
+
   var yAxis = d3.axisLeft(yScale).ticks(8);
   var xAxis = defineXAxis(currArray);
+  updateXLabel(currArray);
+
+
   chartG.selectAll('g.x.axis')
     .attr('transform', 'translate(0,' + ((3 * height / 4) + 10) + ')')
     .call(xAxis);
 
-  var rectWidth = 3;
-  var binWidth = xScale(.8) - xScale(0);
-  var num = Math.ceil(binWidth / (rectWidth + 2));
+  
+  
 
   var xlabel = chartG.select(".x").selectAll('.xLabels')
     .data(xScaleLabels);
