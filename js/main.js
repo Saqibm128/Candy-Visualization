@@ -18,6 +18,7 @@ var rectWidth = 3;
 var binWidth;
 var fill = d3.scaleOrdinal(d3.schemeCategory10);
 var currColors = [];
+var currColorLabels = []
 var sorter = 'NONE';
 var currArray = [];
 
@@ -239,16 +240,24 @@ function defineSorter(a,b, type) {
 
 function defineColor(key) {
   currColors = [];
+  currColorLabels = [];
   d3.selectAll('rect')
     .attr('fill', function(d, i) {
       if (key == "Q3_AGE"){
         var temp = Math.floor(parseInt(d[key]) / 10);
+        if (currColors.indexOf(fill(temp))== -1) {
+          if (!isNaN(temp)) {
+            currColors.push(fill(temp));
+            currColorLabels.push(temp);
+          }
+        }
       } else {
         var temp = d[key];
-      }
-      if (currColors.indexOf(fill(temp))== -1) {
-        if (temp != undefined) {
-          currColors.push(fill(temp));
+        if (currColors.indexOf(fill(temp))== -1) {
+          if (temp!=undefined) {
+            currColors.push(fill(temp));
+            currColorLabels.push(temp);
+          }
         }
       }
       return fill(temp);
@@ -268,6 +277,26 @@ function defineColor(key) {
       return d;
     });
   colorLabel.exit().remove();
+
+  var colorLabelN = chartG.selectAll('.colorLabelN')
+    .data(currColorLabels);
+  var enteredColorn = colorLabelN.enter().append('text');
+  colorLabelN.merge(enteredColorn)
+    .attr('class', 'colorLabelN')
+    .attr('x',(2.2*width/3)+20)
+    .attr('y', function(d,i){
+      return 113 + (15*i);
+    })
+    .text(function(d,i) {
+      var temp = d;
+      if (temp < 0) {
+        return 'Unknown';
+      } else if ( temp >= 0) {
+        temp = (parseInt(temp)*10) + ' - ' + (parseInt(temp)*10 + 10);
+      }
+      return temp;
+    });
+  colorLabelN.exit().remove();
 }
 
 //////DATASET
