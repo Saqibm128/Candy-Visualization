@@ -87,7 +87,7 @@ function onXScaleChanged() {
   } else {
     currArray = goingOut;
   }
-  updateXLabel();
+  updateXLabel(currArray);
   updateChart();
 }
 
@@ -109,21 +109,21 @@ function onSortChanged() {
   updateChart();
 }
 
-function updateXLabel() {
+function updateXLabel(array) {
   xScaleLabels = [];
   
-  if (currArray == age) {
-    for (var i = 0; i < currArray.length; i++) {
-      if (currArray[i].key != -1) {
-        xScaleLabels.push((currArray[i].key * 10) + ' - ' + ((currArray[i].key * 10) + 10));
+  if (array == age) {
+    for (var i = 0; i < array.length; i++) {
+      if (array[i].key != -1) {
+        xScaleLabels.push((array[i].key * 10) + ' - ' + ((array[i].key * 10) + 10));
       } else {
         xScaleLabels.push("Unknown");
       }
     }
   } else {
-    for (var i = 0; i < currArray.length; i++) {
-      if (currArray[i].key != -1) {
-        xScaleLabels.push(currArray[i].key);
+    for (var i = 0; i < array.length; i++) {
+      if (array[i].key != -1) {
+        xScaleLabels.push(array[i].key);
       } else {
         xScaleLabels.push("Unknown");
       }
@@ -131,7 +131,7 @@ function updateXLabel() {
   }
   binWidth = xScale(.8) - xScale(0);
   num = Math.ceil(binWidth / (rectWidth + 2));
-  yScale = d3.scaleLinear().domain([d3.max(currArray, function(d) {
+  yScale = d3.scaleLinear().domain([d3.max(array, function(d) {
     return d.values.length / num
   }), 0])
   .range([0, height * 3/4])
@@ -139,7 +139,7 @@ function updateXLabel() {
 
 function defineXAxis(bins) {
   xScale = d3.scaleLinear()
-    .domain([-1, bins.length])
+    .domain([-.5, bins.length-.5])
     .range([0, 9 * width / 10])
   var numberTicks = 10;
   if (bins.length < 10) {
@@ -149,6 +149,9 @@ function defineXAxis(bins) {
 }
 
 function defineSorter(a,b, type) {
+  if (type == 'NONE') {
+    return a.identifier> b.identifier;
+  }
   if (type == 'Q2_GENDER') {
     if(a[type] == b[type]) {
       return 0;
@@ -339,11 +342,9 @@ function updateChart() {
     });
   xlabel.exit().remove();
   for (var j = 0; j < currArray.length; j++) {
-    if (sorter != 'NONE') {
-      currArray[j].values.sort(function(a,b){
-        return defineSorter(a,b,sorter);
-      });
-    }
+    currArray[j].values.sort(function(a,b){
+      return defineSorter(a,b,sorter);
+    });
     var ppl = chartG.selectAll(".people")
       .data(currArray[j].values, function(d) {
         return d.identifier;
