@@ -16,34 +16,7 @@ var yScale;
 var num;
 var rectWidth = 3;
 var binWidth;
-var colors = {
-  Male: '#4e4ef8',
-  Female: '#fb7676',
-  Unknown: '#25f625',
-  NONE: '#00cccc',
-  Yes :'#f9d961',
-  No: '#878787',
-  UnitedStates: '#0074D9',
-  Canada: '#89000a',
-  UnitedKingdom: '#85144b',
-  Germany: '#001f3f',
-  Netherlands: '#FFDC00',
-  Ireland: '#B10DC9',
-  Mexico: '#F012BE',
-  Denmark: '#AAAAAA',
-  Japan: '#3D9970',
-  Scotland: '#7FDBFF',
-  0: '',
-  1: '',
-  2: '',
-  3: '',
-  4: '',
-  5: '',
-  6: '',
-  7: '',
-  8: '',
-  9: ''
-};
+var fill = d3.scaleOrdinal(d3.schemeCategory10);
 
 //////FUNCTIONS
 function cleanData(string) {
@@ -168,15 +141,10 @@ function defineSorter() {
 function defineColor(key) {
   d3.selectAll('rect')
     .attr('fill', function(d, i) {
-      var str = ''+d[key];
-      if (key == 'NONE') {
-        return colors[key];
-      } else if (key == "Q3_AGE" && d[key] != -1){
-        return colors[Math.floor(parseInt(str) / 10)];
-      } else if(colors[str.replace(/\s/g, '')]==undefined) {
-        return colors['Unknown'];
+      if (key == "Q3_AGE"){
+        return fill(Math.floor(parseInt(d[key]) / 10));
       } else {
-        return colors[str.replace(/\s/g, '')];
+        return fill(d[key]);
       }
     })
 }
@@ -263,7 +231,7 @@ function updateChart(currArray) {
     .attr("class", "people")
     .on("mouseover", function(d) {
       d3.selectAll('rect')
-      .attr('opacity', .2)
+      .attr('opacity', .5)
       d3.select(this)
       .transition()
       .attr("width", rectWidth*3)
