@@ -94,6 +94,11 @@ function onXScaleChanged() {
 function onColorChanged() {
   var select = d3.select('#colorSelect').node();
   var value = select.options[select.selectedIndex].value;
+  if (value == "Q4_COUNTRY" || value == "Q3_AGE") {
+    fill = d3.scaleOrdinal(d3.schemeCategory20);
+  } else {
+    fill = d3.scaleOrdinal(d3.schemeCategory10);
+  }
   defineColor(value);
 }
 
@@ -260,7 +265,6 @@ function defineColor(key) {
       return d;
     });
   colorLabel.exit().remove();
-  console.log(currColors);
 }
 
 //////DATASET
