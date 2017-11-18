@@ -18,6 +18,8 @@ var rectWidth = 3;
 var binWidth;
 var fill = d3.scaleOrdinal(d3.schemeCategory10);
 var currColors = [];
+var sorter = 'NONE';
+var currArray = [];
 
 //////FUNCTIONS
 function cleanData(string) {
@@ -76,7 +78,6 @@ function ageBins(dataset) {
 function onXScaleChanged() {
   var select = d3.select('#xScaleSelect').node();
   var value = select.options[select.selectedIndex].value;
-  var currArray = [];
   if (value == "age") {
     currArray = age;
   } else if (value == "gender") {
@@ -86,8 +87,8 @@ function onXScaleChanged() {
   } else {
     currArray = goingOut;
   }
-  updateXLabel(currArray);
-  updateChart(currArray);
+  updateXLabel();
+  updateChart();
 }
 
 function onColorChanged() {
@@ -96,7 +97,14 @@ function onColorChanged() {
   defineColor(value);
 }
 
-function updateXLabel(currArray) {
+function onSortChanged() {
+  var select = d3.select('#sortSelect').node();
+  var value = select.options[select.selectedIndex].value;
+  sorter = value;
+  updateChart();
+}
+
+function updateXLabel() {
   xScaleLabels = [];
   
   if (currArray == age) {
@@ -135,8 +143,90 @@ function defineXAxis(bins) {
   return d3.axisBottom(xScale).ticks(numberTicks);
 }
 
-function defineSorter() {
-
+function defineSorter(a,b, type) {
+  if (type == 'Q2_GENDER') {
+    if(a[type] == b[type]) {
+      return 0;
+    } else if(a[type] == 'Male') {
+      return 1;
+    } else if(b[type] == 'Male') {
+      return -1;
+    } else if (a[type] == 'Female') {
+      return 1;
+    } else if (b[type] == 'Female') {
+      return -1;
+    } else if (a[type] == 'Other') {
+      return 1;
+    } else if (b[type] == 'Other') {
+      return -1;
+    } else if (a[type] == "I'd rather not say") {
+      return 1;
+    } else {
+      return -1;
+    }
+  }
+  if (type == 'Q1_GOING_OUT') {
+    if(a[type] == b[type]) {
+      return 0;
+    } else if(a[type] == 'Yes') {
+      return 1;
+    } else if(b[type] == 'Yes') {
+      return -1;
+    } else if (a[type] == 'No') {
+      return 1;
+    } else {
+      return -1;
+    }
+  }
+  if (type == 'Q3_AGE') {
+    return parseInt(a[type])-parseInt(b[type]);
+  }
+  if (type == 'Q4_COUNTRY') {
+    if(a[type] == b[type]) {
+      return 0;
+    } else if (a[type] == 'Canada') {
+      return 1;
+    } else if (b[type] == 'Canada') {
+      return -1;
+    } else if (a[type] == 'Denmark') {
+      return 1;
+    } else if (b[type] == 'Denmark') {
+      return -1;
+    } else if (a[type] == 'Germany') {
+      return 1;
+    } else if (b[type] == 'Germany') {
+      return -1;
+    } else if (a[type] == 'Ireland') {
+      return 1;
+    } else if (b[type] == 'Ireland') {
+      return -1;
+    } else if (a[type] == 'Japan') {
+      return 1;
+    } else if (b[type] == 'Japan') {
+      return -1;
+    } else if (a[type] == 'Mexico') {
+      return 1;
+    } else if (b[type] == 'Mexico') {
+      return -1;
+    } else if (a[type] == 'Netherlands') {
+      return 1;
+    } else if (b[type] == 'Netherlands') {
+      return -1;
+    } else if (a[type] == 'Scotland') {
+      return 1;
+    } else if (b[type] == 'Scotland') {
+      return -1;
+    } else if (a[type] == 'United Kingdom') {
+      return 1;
+    } else if (b[type] == 'United Kingdom') {
+      return -1;
+    } else if (a[type] == 'United States') {
+      return 1;
+    } else {
+      return -1;
+    }
+  }
+  return a[type]>b[type];
 }
 
 function defineColor(key) {
@@ -170,6 +260,7 @@ function defineColor(key) {
       return d;
     });
   colorLabel.exit().remove();
+  console.log(currColors);
 }
 
 //////DATASET
@@ -211,11 +302,13 @@ d3.csv('./data/candy.csv',
     
     document.getElementById('xScaleSelect').value='age';
     document.getElementById('colorSelect').value='NONE';
-    updateChart(age);
+    document.getElementById('sortSelect').value='NONE';
+    currArray = age;
+    updateChart();
     defineColor('NONE');
   });
 
-function updateChart(currArray) {
+function updateChart() {
 
   var yAxis = d3.axisLeft(yScale).ticks(8);
   var xAxis = defineXAxis(currArray);
@@ -242,6 +335,11 @@ function updateChart(currArray) {
     });
   xlabel.exit().remove();
   for (var j = 0; j < currArray.length; j++) {
+    if (sorter != 'NONE') {
+      currArray[j].values.sort(function(a,b){
+        return defineSorter(a,b,sorter);
+      });
+    }
     var ppl = chartG.selectAll(".people")
       .data(currArray[j].values, function(d) {
         return d.identifier;

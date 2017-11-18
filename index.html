@@ -11,7 +11,7 @@
             <svg width="710" height="600" style="border: 1px solid #777;">
             </svg>
         </div>
-        <div style="margin-left: 380px;">
+        <div style="margin-left: 290px;">
             <label for="categorySelect">X Scale:</label>
             <select class="custom-select small" id="xScaleSelect" onchange="onXScaleChanged()">
               <option selected value="age">Age (year)</option>
@@ -21,6 +21,14 @@
             </select>
             <label for="categorySelect">Color By:</label>
             <select class="custom-select small" id="colorSelect" onchange="onColorChanged()">
+              <option selected value="NONE">None</option>
+              <option value="Q2_GENDER">Gender</option>
+              <option value="Q3_AGE">Age (year)</option>
+              <option value="Q4_COUNTRY">Country</option>
+              <option value="Q1_GOING_OUT">Going Out</option>
+            </select>
+            <label for="categorySelect">Sort By:</label>
+            <select class="custom-select small" id="sortSelect" onchange="onSortChanged()">
               <option selected value="NONE">None</option>
               <option value="Q2_GENDER">Gender</option>
               <option value="Q3_AGE">Age (year)</option>
