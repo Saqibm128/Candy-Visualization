@@ -17,6 +17,7 @@ var num;
 var rectWidth = 3;
 var binWidth;
 var fill = d3.scaleOrdinal(d3.schemeCategory10);
+var currColors = [];
 
 //////FUNCTIONS
 function cleanData(string) {
@@ -139,14 +140,36 @@ function defineSorter() {
 }
 
 function defineColor(key) {
+  currColors = [];
   d3.selectAll('rect')
     .attr('fill', function(d, i) {
       if (key == "Q3_AGE"){
-        return fill(Math.floor(parseInt(d[key]) / 10));
+        var temp = Math.floor(parseInt(d[key]) / 10);
       } else {
-        return fill(d[key]);
+        var temp = d[key];
       }
+      if (currColors.indexOf(fill(temp))== -1) {
+        if (temp != undefined) {
+          currColors.push(fill(temp));
+        }
+      }
+      return fill(temp);
     })
+  var colorLabel = chartG.selectAll('.colorLabel')
+    .data(currColors);
+  var enteredColor = colorLabel.enter().append('rect');
+  colorLabel.merge(enteredColor)
+    .attr('width', 15)
+    .attr('height', 15)
+    .attr('x', 2.2*width/3)
+    .attr('class', 'colorLabel')
+    .attr('y', function(d,i){
+      return 100 + (15*i);
+    })
+    .attr('fill', function(d,i) {
+      return d;
+    });
+  colorLabel.exit().remove();
 }
 
 //////DATASET
@@ -201,10 +224,7 @@ function updateChart(currArray) {
 
   chartG.selectAll('g.x.axis')
     .attr('transform', 'translate(0,' + ((3 * height / 4) + 10) + ')')
-    .call(xAxis);
-
-  
-  
+    .call(xAxis); 
 
   var xlabel = chartG.select(".x").selectAll('.xLabels')
     .data(xScaleLabels);
@@ -230,7 +250,7 @@ function updateChart(currArray) {
     .append("rect")
     .attr("class", "people")
     .on("mouseover", function(d) {
-      d3.selectAll('rect')
+      d3.selectAll('.people')
       .attr('opacity', .5)
       d3.select(this)
       .transition()
@@ -239,7 +259,7 @@ function updateChart(currArray) {
       .attr('opacity', 1)
     })
     .on("mouseout", function(d) {
-      d3.selectAll('rect')
+      d3.selectAll('.people')
       .attr('opacity', 1)
       d3.select(this)
       .transition()
