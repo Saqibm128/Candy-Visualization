@@ -24,23 +24,23 @@ var currArray = [];
 // Subcandy bar
 var candyObject;
 var totalLengthOfData;
+var fullDataset;
 
 var personTooltip = d3.tip()
-  .attr("class", "person tooltip")
+  .attr("class", "person tooltip d3-tip")
   .offset([-12, 0])
   .html(function(d) {
-    console.log(d)
     return "<table><thead><tr><td>Gender</td><td>Age</td><td>Country</td></tr></thead>" +
       "<tbody><tr><td>" + d.Q2_GENDER + "</td><td>" + d.Q3_AGE + "</td><td>" + d.Q4_COUNTRY + "</td></tr></tbody></table>";
   });
-  var candyTooltip = d3.tip()
-    .attr("class", "candy tooltip")
-    .offset([-12, 0])
-    .html(function(d) {
-      console.log(d)
-      return "<table><thead><tr><td>Candy Response</td><td>Perentage</td></tr></thead>" +
-        "<tbody><tr><td>" + d.key + "</td><td>" + d.portion + "</td></tr></tbody></table>";
-    });
+var candyTooltip = d3.tip()
+  .attr("class", "candy tooltip d3-tip")
+  .offset([-12, 0])
+  .html(function(d) {
+    console.log(d)
+    return "<table><thead><tr><td>Candy Response</td><td>Perentage</td></tr></thead>" +
+      "<tbody><tr><td>" + d.key + "</td><td>" + d.portion + "</td></tr></tbody></table>";
+  });
 svg.call(personTooltip)
 svg.call(candyTooltip)
 
@@ -264,9 +264,16 @@ function onCandyChanged() {
   var candyVarName = $("#candyOptions").val()
   var cummulative = 0; //Because d3.stack is hard to figure out
   var toUse = []
-  candyObject[candyVarName].forEach(function(d) {
+  candyObject[candyVarName].
+  sort(function(a, b) {
+    return a.key.localeCompare(b.key);
+  }).
+  forEach(function(d) {
+    var key;
+    if (d.key == -1) key = "No Response";
+    else key = d.key
     toUse.push({
-      "key": d.key,
+      "key": key,
       "portion": d.values.length / totalLengthOfData,
       "length": d.values.length,
       "cummulative": cummulative,
@@ -275,29 +282,23 @@ function onCandyChanged() {
     })
     cummulative += d.values.length;
   })
-  var bar = d3.select("#candyBarGroup").selectAll(".bar.candy").data(toUse) //no need to update
+
+  var bar = d3.select("#candyBarGroup").selectAll(".bar.candy").data(toUse, function(d) {
+
+    return d.key;
+  })
   var enteredBar = bar.enter()
     .append("g")
-    .attr("transform", function(d) {
-      return "translate(" + String(d.cummulativePortion * width) + ", 0)";
+  bar.merge(enteredBar).transition().attr("transform", function(d) {
+
+      return "translate(" + String(d.cummulativePortion * width) + ", " + String(height - 25) + ")";
     })
     .attr("class", function(d) {
       return d.key + " bar candy"
     })
   enteredBar.append("rect")
     .attr("height", 25)
-    .attr("width", function(d) {
-      console.log(d)
-      return d.portion * width;
-    })
-    .attr("fill", function(d) {
-      if (d.key === "MEH") return "#FFBD33";
-      else if (d.key === "DESPAIR") return "#C70039";
-      else if (d.key === "JOY") return "#75FF33";
-      else return "#FFFFFF"
-    })
     .on("mouseover", function(d) {
-      console.log(d)
       d3.selectAll("rect").attr("opacity", .5);
       d3.select(this).attr("opacity", 1)
       d.original.values.forEach(function(d) {
@@ -309,16 +310,38 @@ function onCandyChanged() {
       d3.selectAll("rect").attr("opacity", 1);
       candyTooltip.hide(d)
     })
+    .on("dblclick", function(d) {
+      var heldOntoVarName = $("#candyOptions").val()
+      chartG.selectAll("*").remove()
+      setup(false, d.original.values)
+      $("#candyOptions").val(heldOntoVarName)
+      onCandyChanged()
+    })
+
+  enteredBar.merge(bar).selectAll("rect").data(toUse,
+      function(d) {
+        return d.key;
+      })
+    .transition()
+    .attr("width", function(d) {
+      return d.portion * width;
+    })
+    .attr("fill", function(d) {
+      if (d.key === "MEH") return "#FFBD33";
+      else if (d.key === "DESPAIR") return "#C70039";
+      else if (d.key === "JOY") return "#75FF33";
+      else return "#FFFFFF"
+    })
 
 
   enteredBar.append("text")
     .text(function(d) {
+      if (d.key == -1) {
+        return "No Response"
+      }
       return d.key
     })
     .attr("y", 20)
-    .attr("x", function(d) {
-      return d.portion * width / 2;
-    })
   bar.exit().remove()
 }
 
@@ -394,64 +417,71 @@ d3.csv('./data/candy.csv',
     return cleaned
   },
   function(error, dataset) {
-    if (error) {
-      console.error('Error while loading dataset.');
-      console.error(error);
-      return;
-    }
-    chartG.selectAll('title').data(["CHART TITLE"]).enter().append('text').attr('x', width * .7).attr('y', -20).text(function(d) {
-      return d;
-    });
-    totalLengthOfData = dataset.length;
-    //CandyFrequencies and the pull down button setup
-    var candyVarName = Object.keys(dataset[0]).slice(6, 54) // The location of the candy names
-    var candyNames = candyVarName.map(function(d) {
-      return {
-        "varName": d,
-        "real": d.substr(3).replace(new RegExp("_", "g"), " ")
-      } // remove the Q6_ portion and any underscores
-    })
-    //Populate the select option for candy
-    for (var i = 0; i < candyNames.length; i++) {
-      var candyPullDown = d3.select("#candyOptions")
-        .append("option")
-        .text(candyNames[i].real)
-        .attr("value", candyNames[i].varName)
-    }
-    $("#candyOptions").val(candyNames[0].varName)
-    var allbins = Object.keys(dataset).map(function(keyName) {
-      return candyBins(dataset, keyName);
-    })
-    //Populate the global candyObject with the data for candies
-    candyObject = {}
-    candyVarName.forEach(function(d) {
-      candyObject[d] = candyBins(dataset, d);
-    });
-    //DEMOGRAPHICS;
-    gender = candyBins(dataset, 'Q2_GENDER');
-    goingOut = candyBins(dataset, 'Q1_GOING_OUT');
-    age = ageBins(dataset).sort(function(a, b) {
-      return parseInt(a.key) > parseInt(b.key);
-    });
-    country = candyBins(dataset, 'Q4_COUNTRY').sort(function(a, b) {
-      return a.key > b.key;
-    }).sort(function(a, b) {
-      return parseInt(a.values.length) < parseInt(b.values.length);
-    });
-    state = candyBins(dataset, 'Q5_STATE_PROVINCE_COUNTY_ETC');
-    chartG.append('g')
-      .attr('class', 'x')
-      .append('g')
-      .attr('class', 'x axis');
+    setup(error, dataset);
+    fullDataset = dataset;
+  }
+);
 
-    document.getElementById('xScaleSelect').value = 'age';
-    document.getElementById('colorSelect').value = 'NONE';
-    document.getElementById('sortSelect').value = 'NONE';
-    currArray = age;
-    updateChart();
-    defineColor('NONE');
-    onColorChanged();
+function setup(error, dataset) {
+  if (error) {
+    console.error('Error while loading dataset.');
+    console.error(error);
+    return;
+  }
+  chartG.selectAll('title').data(["CHART TITLE"]).enter().append('text').attr('x', width * .7).attr('y', -20).text(function(d) {
+    return d;
   });
+  totalLengthOfData = dataset.length;
+  //CandyFrequencies and the pull down button setup
+  var candyVarName = Object.keys(dataset[0]).slice(6, 54) // The location of the candy names
+  var candyNames = candyVarName.map(function(d) {
+    return {
+      "varName": d,
+      "real": d.substr(3).replace(new RegExp("_", "g"), " ")
+    } // remove the Q6_ portion and any underscores
+  })
+  //Populate the select option for candy
+  for (var i = 0; i < candyNames.length; i++) {
+    var candyPullDown = d3.select("#candyOptions")
+      .append("option")
+      .text(candyNames[i].real)
+      .attr("value", candyNames[i].varName)
+  }
+  $("#candyOptions").val(candyNames[0].varName)
+  var allbins = Object.keys(dataset).map(function(keyName) {
+    return candyBins(dataset, keyName);
+  })
+  //Populate the global candyObject with the data for candies
+  candyObject = {}
+  candyVarName.forEach(function(d) {
+    candyObject[d] = candyBins(dataset, d);
+  });
+  //DEMOGRAPHICS;
+  gender = candyBins(dataset, 'Q2_GENDER');
+  goingOut = candyBins(dataset, 'Q1_GOING_OUT');
+  age = ageBins(dataset).sort(function(a, b) {
+    return parseInt(a.key) > parseInt(b.key);
+  });
+  country = candyBins(dataset, 'Q4_COUNTRY').sort(function(a, b) {
+    return a.key > b.key;
+  }).sort(function(a, b) {
+    return parseInt(a.values.length) < parseInt(b.values.length);
+  });
+  state = candyBins(dataset, 'Q5_STATE_PROVINCE_COUNTY_ETC');
+  chartG.append('g')
+    .attr('class', 'x')
+    .append('g')
+    .attr('class', 'x axis');
+
+  document.getElementById('xScaleSelect').value = 'age';
+  document.getElementById('colorSelect').value = 'NONE';
+  document.getElementById('sortSelect').value = 'NONE';
+  currArray = age;
+  updateChart();
+  defineColor('NONE');
+  onColorChanged();
+  onCandyChanged();
+}
 
 function updateChart() {
 
@@ -530,7 +560,7 @@ function updateChart() {
         personTooltip.hide(d)
         d3.selectAll('.people')
           .attr('opacity', 1)
-        d3.select(this)
+        d3.selectAll('.people')
           .transition()
           .attr("width", rectWidth)
           .attr("height", rectWidth)
@@ -547,3 +577,8 @@ function updateChart() {
       .attr("height", (rectWidth));
   }
 }
+
+$("#reset_graph").on("click", function() {
+  chartG.selectAll("*").remove();
+  setup(false, fullDataset);
+})
