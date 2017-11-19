@@ -9,6 +9,7 @@
     <div id="main">
         <div style="margin-left: 10px;">
             <svg width="710" height="600" style="border: 1px solid #777;">
+              <g class="candy bar group" id="candyBarGroup"></g>
             </svg>
         </div>
         <div style="margin-left: 140px;">
@@ -35,6 +36,9 @@
               <option value="Q4_COUNTRY">Country</option>
               <option value="Q1_GOING_OUT">Going Out</option>
             </select>
+            <label for="categorySelect">Candy:</label>
+            <select class="custom-select small" id="candyOptions" onchange="onCandyChanged()">
+            </select>
         </div>
         <div id="chart">
         </div>
@@ -43,5 +47,6 @@
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha256-k2WSCIexGzOj3Euiig+TlR8gA0EmPjuc79OEeY5L45g=" crossorigin="anonymous"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 <script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="./js/d3-tip.js"></script>
 <script src="./js/main.js"></script>
 </html>
