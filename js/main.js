@@ -25,6 +25,7 @@ var currArray = [];
 var candyObject;
 var totalLengthOfData;
 var fullDataset;
+var hide = .3;
 
 var personTooltip = d3.tip()
   .attr("class", "person tooltip d3-tip")
@@ -39,7 +40,7 @@ var candyTooltip = d3.tip()
   .html(function(d) {
     console.log(d)
     return "<table><thead><tr><td>Candy Response</td><td>Perentage</td></tr></thead>" +
-      "<tbody><tr><td>" + d.key + "</td><td>" + d.portion + "</td></tr></tbody></table>";
+      "<tbody><tr><td>" + d.key + "</td><td>" + Math.round(d.portion*100)+'%' + "</td></tr></tbody></table>";
   });
 svg.call(personTooltip)
 svg.call(candyTooltip)
@@ -299,7 +300,7 @@ function onCandyChanged() {
   enteredBar.append("rect")
     .attr("height", 25)
     .on("mouseover", function(d) {
-      d3.selectAll("rect").attr("opacity", .5);
+      d3.selectAll(".people").attr("opacity", hide);
       d3.select(this).attr("opacity", 1)
       d.original.values.forEach(function(d) {
         d3.selectAll("#id" + String(d.identifier)).attr("opacity", 1);
@@ -330,7 +331,7 @@ function onCandyChanged() {
       if (d.key === "MEH") return "#FFBD33";
       else if (d.key === "DESPAIR") return "#C70039";
       else if (d.key === "JOY") return "#75FF33";
-      else return "#FFFFFF"
+      else return "#0000FF"
     })
 
 
@@ -348,7 +349,7 @@ function onCandyChanged() {
 function defineColor(key) {
   currColors = [];
   currColorLabels = [];
-  d3.selectAll('rect')
+  d3.selectAll('rect.people')
     .attr('fill', function(d, i) {
       if (key == "Q3_AGE") {
         var temp = Math.floor(parseInt(d[key]) / 10);
@@ -547,14 +548,14 @@ function updateChart() {
         personTooltip.show(d);
         d3.selectAll('.people')
           .transition()
-          .attr('opacity', .5)
+          .attr('opacity', hide)
         d3.select(this)
           .transition()
           .attr("width", rectWidth * 3)
           .attr("height", rectWidth * 3)
           .attr('opacity', 1)
         d3.selectAll('.counters')
-          .attr('opacity', .5)
+          .attr('opacity', hide)
       })
       .on("mouseout", function(d) {
         personTooltip.hide(d)
