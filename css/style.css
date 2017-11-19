@@ -2,6 +2,11 @@
     padding: 10px;
 }
 
+svg {
+  display: block;
+  margin: auto;
+}
+
 body {
     font-family: "Open Sans";
 }
@@ -22,7 +27,8 @@ body {
 .d3-tip {
   line-height: 1;
   padding: 6px;
-  background: rgba(240, 240, 240, 0.95);
+  background: #b0cdfc;
+  opacity: .9;
   color: #333;
   border-radius: 4px;
   font-size: 12px;

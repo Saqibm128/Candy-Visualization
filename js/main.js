@@ -560,7 +560,7 @@ function updateChart() {
         personTooltip.hide(d)
         d3.selectAll('.people')
           .attr('opacity', 1)
-        d3.select(this)
+        d3.selectAll('.people')
           .transition()
           .attr("width", rectWidth)
           .attr("height", rectWidth)
