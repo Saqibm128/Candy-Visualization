@@ -24,17 +24,17 @@ var currArray = [];
 // Subcandy bar
 var candyObject;
 var totalLengthOfData;
+var fullDataset;
 
 var personTooltip = d3.tip()
-  .attr("class", "person tooltip")
+  .attr("class", "person tooltip d3-tip")
   .offset([-12, 0])
   .html(function(d) {
-    console.log(d)
     return "<table><thead><tr><td>Gender</td><td>Age</td><td>Country</td></tr></thead>" +
       "<tbody><tr><td>" + d.Q2_GENDER + "</td><td>" + d.Q3_AGE + "</td><td>" + d.Q4_COUNTRY + "</td></tr></tbody></table>";
   });
   var candyTooltip = d3.tip()
-    .attr("class", "candy tooltip")
+    .attr("class", "candy tooltip d3-tip")
     .offset([-12, 0])
     .html(function(d) {
       console.log(d)
@@ -264,9 +264,16 @@ function onCandyChanged() {
   var candyVarName = $("#candyOptions").val()
   var cummulative = 0; //Because d3.stack is hard to figure out
   var toUse = []
-  candyObject[candyVarName].forEach(function(d) {
+  candyObject[candyVarName].
+  sort(function(a, b) {
+    return a.key.localeCompare(b.key);
+  }).
+  forEach(function(d) {
+    var key;
+    if (d.key == -1) key = "No Response";
+    else key = d.key
     toUse.push({
-      "key": d.key,
+      "key": key,
       "portion": d.values.length / totalLengthOfData,
       "length": d.values.length,
       "cummulative": cummulative,
@@ -275,21 +282,22 @@ function onCandyChanged() {
     })
     cummulative += d.values.length;
   })
-  var bar = d3.select("#candyBarGroup").selectAll(".bar.candy").data(toUse) //no need to update
+
+  var bar = d3.select("#candyBarGroup").selectAll(".bar.candy").data(toUse, function(d) {
+
+    return d.key;
+  })
   var enteredBar = bar.enter()
     .append("g")
-    .attr("transform", function(d) {
-      return "translate(" + String(d.cummulativePortion * width) + ", 0)";
+  bar.merge(enteredBar).transition().attr("transform", function(d) {
+
+      return "translate(" + String(d.cummulativePortion * width) + ", " + String(height - 25)  + ")";
     })
     .attr("class", function(d) {
       return d.key + " bar candy"
     })
   enteredBar.append("rect")
     .attr("height", 25)
-    .attr("width", function(d) {
-      console.log(d)
-      return d.portion * width;
-    })
     .attr("fill", function(d) {
       if (d.key === "MEH") return "#FFBD33";
       else if (d.key === "DESPAIR") return "#C70039";
@@ -297,7 +305,6 @@ function onCandyChanged() {
       else return "#FFFFFF"
     })
     .on("mouseover", function(d) {
-      console.log(d)
       d3.selectAll("rect").attr("opacity", .5);
       d3.select(this).attr("opacity", 1)
       d.original.values.forEach(function(d) {
@@ -309,16 +316,30 @@ function onCandyChanged() {
       d3.selectAll("rect").attr("opacity", 1);
       candyTooltip.hide(d)
     })
+    .on("dblclick", function(d) {
+      var heldOntoVarName = $("#candyOptions").val()
+      chartG.selectAll("*").remove()
+      setup(false, d.original.values)
+      $("#candyOptions").val(heldOntoVarName)
+      onCandyChanged()
+    })
+
+  enteredBar.merge(bar).selectAll("rect").data(toUse,
+    function(d) {return d.key;})
+    .transition()
+    .attr("width", function(d) {
+        return d.portion * width;
+      })
 
 
   enteredBar.append("text")
     .text(function(d) {
+      if (d.key == -1) {
+        return "No Response"
+      }
       return d.key
     })
     .attr("y", 20)
-    .attr("x", function(d) {
-      return d.portion * width / 2;
-    })
   bar.exit().remove()
 }
 
@@ -393,7 +414,10 @@ d3.csv('./data/candy.csv',
     })
     return cleaned
   },
-  function(error, dataset) {
+  setup
+  );
+
+  function setup(error, dataset) {
     if (error) {
       console.error('Error while loading dataset.');
       console.error(error);
@@ -451,7 +475,8 @@ d3.csv('./data/candy.csv',
     updateChart();
     defineColor('NONE');
     onColorChanged();
-  });
+    onCandyChanged();
+  }
 
 function updateChart() {
 
