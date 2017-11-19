@@ -336,7 +336,6 @@ d3.csv('./data/candy.csv',
       .attr('class', 'x')
       .append('g')
       .attr('class', 'x axis');
-    
     document.getElementById('xScaleSelect').value='age';
     document.getElementById('colorSelect').value='NONE';
     document.getElementById('sortSelect').value='NONE';
