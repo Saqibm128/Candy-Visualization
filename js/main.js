@@ -414,7 +414,10 @@ d3.csv('./data/candy.csv',
     })
     return cleaned
   },
-  setup
+  function(error, dataset) {
+    setup(error, dataset);
+    fullDataset = dataset;
+}
   );
 
   function setup(error, dataset) {
@@ -572,3 +575,8 @@ function updateChart() {
       .attr("height", (rectWidth));
   }
 }
+
+$("#reset_graph").on("click", function() {
+  chartG.selectAll("*").remove();
+  setup(false, fullDataset);
+})
