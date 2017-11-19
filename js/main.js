@@ -315,6 +315,7 @@ d3.csv('./data/candy.csv',
       console.error(error);
       return;
     }
+    chartG.selectAll('title').data(["CHART TITLE"]).enter().append('text').attr('x',width*.7).attr('y',-20).text(function(d){return d;});
     //CandyFrequencies
     var allbins = Object.keys(dataset).map(function(keyName) {
       return candyBins(dataset, keyName);
@@ -350,7 +351,6 @@ function updateChart() {
   var xAxis = defineXAxis(currArray);
   updateXLabel(currArray);
 
-
   chartG.selectAll('g.x.axis')
     .attr('transform', 'translate(0,' + ((3 * height / 4) + 10) + ')')
     .call(xAxis); 
@@ -370,6 +370,26 @@ function updateChart() {
       return d;
     });
   xlabel.exit().remove();
+
+  var count = chartG.select(".x").selectAll('.counters')
+    .data(currArray);
+  var enteredCount = count.enter().append('text');
+  count.merge(enteredCount).attr('x', function(d, i) {
+      return xScale(i);
+    })
+    .attr('class', 'counters')
+    .attr('y', ((3 * height / 4) + 50))
+    .attr('font-size', '9')
+    .attr('text-anchor', 'middle')
+    .text(function(d) {
+      if (d.values.length != 1) {
+        return d.values.length + ' people';
+      } else {
+        return d.values.length + ' person';
+      }
+    });
+  count.exit().remove();
+
   for (var j = 0; j < currArray.length; j++) {
     currArray[j].values.sort(function(a,b){
       return defineSorter(a,b,sorter);
@@ -389,6 +409,8 @@ function updateChart() {
       .attr("width", rectWidth*3)
       .attr("height", rectWidth*3)
       .attr('opacity', 1)
+      d3.selectAll('.counters')
+      .attr('opacity', .5)
     })
     .on("mouseout", function(d) {
       d3.selectAll('.people')
@@ -397,6 +419,8 @@ function updateChart() {
       .transition()
       .attr("width", rectWidth)
       .attr("height", rectWidth)
+      d3.selectAll('.counters')
+      .attr('opacity', 1)
     });
     ppl.merge(enteredPpl).transition().attr("x", function(d, i) {
         return xScale(j) - binWidth / 2 + ((rectWidth + 2) * (i % num));
