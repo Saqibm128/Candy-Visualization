@@ -102,6 +102,27 @@ function ageBins(dataset) {
   return bin;
 }
 
+function mapSetup(dataset) {
+  var map = d3.geomap.choropleth()
+    .geofile('/data/USA.json')
+    .projection(d3.geo.albersUsa)
+    .column('count')
+    .unitId('fips')
+    .scale(500)
+    .legend(true);
+    map.height = height
+    map.width = width
+    var data_by_states = []
+    candyBins(dataset, "fips").forEach(function(bin, i) {
+      data_by_states[i] = {"fips":String(bin.key), "count":String(bin.values.length)}
+    })
+    map.data = data_by_states
+    d3.select('#map')
+        .datum(data_by_states)
+        .call(map.draw, map);
+
+}
+
 function onXScaleChanged() {
   var select = d3.select('#xScaleSelect').node();
   var value = select.options[select.selectedIndex].value;
@@ -457,7 +478,7 @@ function defineColor(key) {
 }
 
 //////DATASET
-d3.csv('./data/candy.csv',
+d3.csv('./data/candy2.csv',
   function(row, i) {
     var cleaned = {}
     Object.keys(row).forEach(function(keyName) {
@@ -521,6 +542,7 @@ function setup(error, dataset) {
   updateChart();
   defineColor('NONE');
   onColorChanged();
+  mapSetup(dataset);
 }
 
 function updateChart() {
