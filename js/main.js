@@ -1,11 +1,13 @@
 ///////VARIABLES
 var svg = d3.select('svg');
 var height = svg.attr('height');
-var width = svg.attr('width');
+var width = 710;//svg.attr('width');
 var people = svg.append('g').attr('class', 'people');
 ///CHART1
-var chartG = svg.append('g')
+var chart1 = svg.append('g')
   .attr('transform', 'translate(' + [width / 20, height / 10] + ')');
+var chart2 = svg.append('g')
+  .attr('transform', 'translate(' + [width, 0] + 20+')');
 var gender = [];
 var goingOut = [];
 var age = [];
@@ -26,6 +28,7 @@ var candyObject;
 var totalLengthOfData;
 var fullDataset;
 var hide = .3;
+var clicked = null; //candy that is currently clicked on
 
 var personTooltip = d3.tip()
   .attr("class", "person tooltip d3-tip")
@@ -131,6 +134,137 @@ function onSortChanged() {
   var value = select.options[select.selectedIndex].value;
   sorter = value;
   updateChart();
+}
+function scatterplot(candyarray, names) {
+  chart2.append('rect')
+    .attr('height',6 * height / 10)
+    .attr('width',6 * width / 10)
+    .attr("opacity", 0)
+    .on("click", function(d){
+      if (clicked!=null){
+        d3.select(clicked).attr("stroke-opacity", 0);
+        d3.select('.'+clicked.id).attr('visibility',"hidden");
+        clicked = null;
+      }
+    });
+  var yScale2 = d3.scaleLinear()
+    .domain([0, 100])
+    .range([6 * height / 10, 0])
+  var yAxis2 = d3.axisLeft(yScale2).ticks(5);
+  chart2.append('g')
+    .attr('transform', 'translate(0,0)')
+    .call(yAxis2);
+  var xScale2 = d3.scaleLinear()
+    .domain([0, 40])
+    .range([0, 6 * width / 10])
+  var xAxis2 = d3.axisBottom(xScale2).ticks(5);
+  chart2.append('g')
+    .attr('transform', 'translate(0,'+(6 * height / 10)+')')
+    .call(xAxis2);
+  chart2.selectAll('candy')
+  .data(candyarray)
+  .enter()
+  .append('circle')
+  .attr('id', function(d, i){
+    return 'id'+names[i];
+  })
+  .attr('cy', function(d){
+    var total = 0;
+    var joy = 0;
+    for (var i = 0; i < d.length; i++) {
+      total = total + d[i].values.length;
+      if (d[i].key == "JOY") {
+        joy = d[i].values.length;
+      }
+    }
+    var pos = joy/total*100;
+    d3.select(this).attr('fill', function(d){
+      if (pos >= 66) {
+        return "#75FF33";
+      } else if (pos >= 33) {
+        return "#FFBD33";
+      } else {
+        return "#C70039";
+      }
+    })
+    return yScale2(pos);
+  })
+  .attr('cx', function(d){
+    var total = 0;
+    var age = 0;
+    for (var i = 0; i < d.length; i++) {
+      total = total + d[i].values.length;
+      if (d[i].key == "JOY") {
+        d[i].values.forEach(function(d) {
+          age = parseInt(age) + parseInt(d.Q3_AGE);
+        });
+      }
+    }
+    return xScale2(age/total);
+  })
+  .attr('r', 5)
+  .attr('opacity', .5)
+  .attr("stroke", "#0000FF")
+  .attr("stroke-width", "3px")
+  .attr("stroke-opacity", 0)
+  .on("mouseover", function(d){
+    d3.select(this).attr("stroke-opacity", 1);
+  })
+  .on("mouseout", function(d){
+    if (clicked != this) {
+      d3.select(this).attr("stroke-opacity", 0);
+    }
+  })
+  .on("click", function(d){
+    if (clicked !=null) {
+      d3.select(clicked).attr("stroke-opacity", 0);
+      d3.select('.'+clicked.id).attr('visibility', 'hidden');
+    }
+    clicked = this;
+    d3.select('.'+clicked.id).attr('visibility', 'visible');
+  });
+}
+
+function createDonuts(garray, index, key) {
+  var donutG = chart2.append('g').attr('class', function(d){
+      return 'id'+String(key);
+    }).attr('visibility', 'hidden');
+  var lastEnd = 0;
+  var total = d3.sum(garray, function(d) { return d.values.length; });
+  for (var i = 0; i < garray.length; i++) {
+    var d = garray[i];
+    var angle = (garray[i].values.length/total)*360*(Math.PI/180);
+    var arc = d3.arc()
+    .innerRadius(50)
+    .outerRadius(80)
+    .startAngle(lastEnd)
+    .endAngle(lastEnd+angle);
+    donutG.append("path")
+    .attr("class", 'arc')
+    .attr("d", arc)
+    .attr("fill", function() {
+      if (d.key === "MEH") return "#FFBD33";
+      else if (d.key === "DESPAIR") return "#C70039";
+      else if (d.key === "JOY") return "#75FF33";
+      else return "#0000FF"
+    })
+    .attr("transform", "translate("+[100,100]+")")
+    .on("mouseover", function(d) {
+      d3.selectAll(".people").attr("opacity", hide);
+      d3.selectAll(".arc").attr("opacity", hide);
+      d3.select(this).attr("opacity", 1);
+    })
+    .on("mouseout", function(d) {
+      d3.selectAll(".people").attr("opacity", 1);
+      d3.selectAll(".arc").attr("opacity", 1);
+    });
+    // key = key.substr(3).replace(new RegExp("_", "g"), " ");
+    // donutG.append("text")
+    // .attr("transform", "translate("+(50)+","+(100+10*index)+")")
+    // .attr("text-anchor", "middle")
+    // .text(function(d){ return key;})
+     lastEnd = lastEnd + angle;
+  }
 }
 
 function updateXLabel(array) {
@@ -261,91 +395,6 @@ function defineSorter(a, b, type) {
   return a[type] > b[type];
 }
 
-function onCandyChanged() {
-  var candyVarName = $("#candyOptions").val()
-  var cummulative = 0; //Because d3.stack is hard to figure out
-  var toUse = []
-  candyObject[candyVarName].
-  sort(function(a, b) {
-    return a.key.localeCompare(b.key);
-  }).
-  forEach(function(d) {
-    var key;
-    if (d.key == -1) key = "No Response";
-    else key = d.key
-    toUse.push({
-      "key": key,
-      "portion": d.values.length / totalLengthOfData,
-      "length": d.values.length,
-      "cummulative": cummulative,
-      "cummulativePortion": cummulative / totalLengthOfData,
-      "original": d
-    })
-    cummulative += d.values.length;
-  })
-
-  var bar = d3.select("#candyBarGroup").selectAll(".bar.candy").data(toUse, function(d) {
-
-    return d.key;
-  })
-  var enteredBar = bar.enter()
-    .append("g")
-  bar.merge(enteredBar).transition().attr("transform", function(d) {
-
-      return "translate(" + String(d.cummulativePortion * width) + ", " + String(height - 25) + ")";
-    })
-    .attr("class", function(d) {
-      return d.key + " bar candy"
-    })
-  enteredBar.append("rect")
-    .attr("height", 25)
-    .on("mouseover", function(d) {
-      d3.selectAll(".people").attr("opacity", hide);
-      d3.select(this).attr("opacity", 1)
-      d.original.values.forEach(function(d) {
-        d3.selectAll("#id" + String(d.identifier)).attr("opacity", 1);
-      });
-      candyTooltip.show(d);
-    })
-    .on("mouseout", function(d) {
-      d3.selectAll("rect").attr("opacity", 1);
-      candyTooltip.hide(d)
-    })
-    .on("dblclick", function(d) {
-      var heldOntoVarName = $("#candyOptions").val()
-      chartG.selectAll("*").remove()
-      setup(false, d.original.values)
-      $("#candyOptions").val(heldOntoVarName)
-      onCandyChanged()
-    })
-
-  enteredBar.merge(bar).selectAll("rect").data(toUse,
-      function(d) {
-        return d.key;
-      })
-    .transition()
-    .attr("width", function(d) {
-      return d.portion * width;
-    })
-    .attr("fill", function(d) {
-      if (d.key === "MEH") return "#FFBD33";
-      else if (d.key === "DESPAIR") return "#C70039";
-      else if (d.key === "JOY") return "#75FF33";
-      else return "#0000FF"
-    })
-
-
-  enteredBar.append("text")
-    .text(function(d) {
-      if (d.key == -1) {
-        return "No Response"
-      }
-      return d.key
-    })
-    .attr("y", 20)
-  bar.exit().remove()
-}
-
 function defineColor(key) {
   currColors = [];
   currColorLabels = [];
@@ -370,7 +419,7 @@ function defineColor(key) {
       }
       return fill(temp);
     })
-  var colorLabel = chartG.selectAll('.colorLabel')
+  var colorLabel = chart1.selectAll('.colorLabel')
     .data(currColors);
   var enteredColor = colorLabel.enter().append('rect');
   colorLabel.merge(enteredColor)
@@ -386,7 +435,7 @@ function defineColor(key) {
     });
   colorLabel.exit().remove();
 
-  var colorLabelN = chartG.selectAll('.colorLabelN')
+  var colorLabelN = chart1.selectAll('.colorLabelN')
     .data(currColorLabels);
   var enteredColorn = colorLabelN.enter().append('text');
   colorLabelN.merge(enteredColorn)
@@ -429,34 +478,25 @@ function setup(error, dataset) {
     console.error(error);
     return;
   }
-  chartG.selectAll('title').data(["CHART TITLE"]).enter().append('text').attr('x', width * .7).attr('y', -20).text(function(d) {
+  chart1.selectAll('title').data(["CHART TITLE"]).enter().append('text').attr('x', width * .7).attr('y', -20).text(function(d) {
     return d;
   });
   totalLengthOfData = dataset.length;
   //CandyFrequencies and the pull down button setup
   var candyVarName = Object.keys(dataset[0]).slice(6, 54) // The location of the candy names
-  var candyNames = candyVarName.map(function(d) {
-    return {
-      "varName": d,
-      "real": d.substr(3).replace(new RegExp("_", "g"), " ")
-    } // remove the Q6_ portion and any underscores
-  })
-  //Populate the select option for candy
-  for (var i = 0; i < candyNames.length; i++) {
-    var candyPullDown = d3.select("#candyOptions")
-      .append("option")
-      .text(candyNames[i].real)
-      .attr("value", candyNames[i].varName)
-  }
-  $("#candyOptions").val(candyNames[0].varName)
-  var allbins = Object.keys(dataset).map(function(keyName) {
-    return candyBins(dataset, keyName);
-  })
   //Populate the global candyObject with the data for candies
   candyObject = {}
+  candyArr = [];
+  candyNames = [];
   candyVarName.forEach(function(d) {
     candyObject[d] = candyBins(dataset, d);
+    candyArr.push(candyBins(dataset, d));
+    candyNames.push(d);
   });
+  scatterplot(candyArr, candyNames);
+  for (var i = 0; i < candyVarName.length; i++) {
+    createDonuts(candyObject[candyVarName[i]], i, candyVarName[i]);
+  }
   //DEMOGRAPHICS;
   gender = candyBins(dataset, 'Q2_GENDER');
   goingOut = candyBins(dataset, 'Q1_GOING_OUT');
@@ -469,7 +509,7 @@ function setup(error, dataset) {
     return parseInt(a.values.length) < parseInt(b.values.length);
   });
   state = candyBins(dataset, 'Q5_STATE_PROVINCE_COUNTY_ETC');
-  chartG.append('g')
+  chart1.append('g')
     .attr('class', 'x')
     .append('g')
     .attr('class', 'x axis');
@@ -481,7 +521,6 @@ function setup(error, dataset) {
   updateChart();
   defineColor('NONE');
   onColorChanged();
-  onCandyChanged();
 }
 
 function updateChart() {
@@ -490,11 +529,11 @@ function updateChart() {
   var xAxis = defineXAxis(currArray);
   updateXLabel(currArray);
 
-  chartG.selectAll('g.x.axis')
+  chart1.selectAll('g.x.axis')
     .attr('transform', 'translate(0,' + ((3 * height / 4) + 10) + ')')
     .call(xAxis);
 
-  var xlabel = chartG.select(".x").selectAll('.xLabels')
+  var xlabel = chart1.select(".x").selectAll('.xLabels')
     .data(xScaleLabels);
 
   var enteredXlabel = xlabel.enter().append('text');
@@ -510,7 +549,7 @@ function updateChart() {
     });
   xlabel.exit().remove();
 
-  var count = chartG.select(".x").selectAll('.counters')
+  var count = chart1.select(".x").selectAll('.counters')
     .data(currArray);
   var enteredCount = count.enter().append('text');
   count.merge(enteredCount).attr('x', function(d, i) {
@@ -533,7 +572,7 @@ function updateChart() {
     currArray[j].values.sort(function(a, b) {
       return defineSorter(a, b, sorter);
     });
-    var ppl = chartG.selectAll(".people")
+    var ppl = chart1.selectAll(".people")
       .data(currArray[j].values, function(d) {
         return d.identifier;
       });
@@ -549,6 +588,8 @@ function updateChart() {
         d3.selectAll('.people')
           .transition()
           .attr('opacity', hide)
+          .attr("width", rectWidth)
+          .attr("height", rectWidth);
         d3.select(this)
           .transition()
           .attr("width", rectWidth * 3)
@@ -580,6 +621,6 @@ function updateChart() {
 }
 
 $("#reset_graph").on("click", function() {
-  chartG.selectAll("*").remove();
+  chart1.selectAll("*").remove();
   setup(false, fullDataset);
 })
