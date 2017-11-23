@@ -141,9 +141,11 @@ function scatterplot(candyarray, names) {
     .attr('width',6 * width / 10)
     .attr("opacity", 0)
     .on("click", function(d){
-      d3.select(clicked).attr("stroke-opacity", 0);
-      d3.select('.'+clicked.id).attr('visibility',"hidden");
-      clicked = null;
+      if (clicked!=null){
+        d3.select(clicked).attr("stroke-opacity", 0);
+        d3.select('.'+clicked.id).attr('visibility',"hidden");
+        clicked = null;
+      }
     });
   var yScale2 = d3.scaleLinear()
     .domain([0, 100])
@@ -214,10 +216,12 @@ function scatterplot(candyarray, names) {
     }
   })
   .on("click", function(d){
-    d3.select(clicked).attr("stroke-opacity", 0);
+    if (clicked !=null) {
+      d3.select(clicked).attr("stroke-opacity", 0);
+      d3.select('.'+clicked.id).attr('visibility', 'hidden');
+    }
     clicked = this;
-    d3.select('.'+clicked.id)
-    .attr('visibility', 'visible');
+    d3.select('.'+clicked.id).attr('visibility', 'visible');
   });
 }
 
