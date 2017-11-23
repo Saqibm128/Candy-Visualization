@@ -10,7 +10,7 @@ svg {
 body {
     font-family: "Open Sans";
 }
-.y-axis line, path {
+.x.axis path {
 	opacity: 0;
 }
 .x.axis text {
