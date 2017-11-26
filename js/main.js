@@ -26,6 +26,7 @@ var candyObject;
 var totalLengthOfData;
 var fullDataset;
 var hide = .3;
+var map;
 
 var personTooltip = d3.tip()
   .attr("class", "person tooltip d3-tip")
@@ -74,6 +75,31 @@ function candyBins(dataset, candy) {
     }
   }
   return bin;
+}
+
+function mapSetup(dataset) {
+  d3.select("#map").selectAll("*").remove()
+  map = d3.geomap.choropleth()
+    .geofile('/data/USA.json')
+    .projection(d3.geo.albersUsa)
+    .column('count')
+    .unitId('fips')
+    .scale(650)
+    .legend(true);
+    map.height = height
+    map.width = width
+    var data_by_states = []
+    for (var i = 1; i < 57; i++) {
+      var fips = String(i);
+      if (fips.length == 1) fips = "0" + fips; //weird fips encoding stuff
+      data_by_states[i-1] = {"fips": fips, "count": String(0)} //initialize all as 0
+    }
+    candyBins(dataset, "fips").forEach(function(bin) {
+      data_by_states[+bin.key-1] = {"fips":String(bin.key), "count":String(bin.values.length)}
+    })
+    d3.select('#map')
+        .datum(data_by_states)
+        .call(map.draw, map);
 }
 
 function ageBins(dataset) {
@@ -408,7 +434,7 @@ function defineColor(key) {
 }
 
 //////DATASET
-d3.csv('./data/candy.csv',
+d3.csv('./data/candy2.csv',
   function(row, i) {
     var cleaned = {}
     Object.keys(row).forEach(function(keyName) {
@@ -434,7 +460,7 @@ function setup(error, dataset) {
   });
   totalLengthOfData = dataset.length;
   //CandyFrequencies and the pull down button setup
-  var candyVarName = Object.keys(dataset[0]).slice(6, 54) // The location of the candy names
+  var candyVarName = Object.keys(dataset[0]).slice(7, 55) // The location of the candy names
   var candyNames = candyVarName.map(function(d) {
     return {
       "varName": d,
@@ -478,10 +504,12 @@ function setup(error, dataset) {
   document.getElementById('colorSelect').value = 'NONE';
   document.getElementById('sortSelect').value = 'NONE';
   currArray = age;
+  mapSetup(dataset);
   updateChart();
   defineColor('NONE');
   onColorChanged();
   onCandyChanged();
+
 }
 
 function updateChart() {
