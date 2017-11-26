@@ -1,11 +1,13 @@
 ///////VARIABLES
 var svg = d3.select('svg');
 var height = svg.attr('height');
-var width = svg.attr('width');
+var width = 710;//svg.attr('width');
 var people = svg.append('g').attr('class', 'people');
 ///CHART1
-var chartG = svg.append('g')
+var chart1 = svg.append('g')
   .attr('transform', 'translate(' + [width / 20, height / 10] + ')');
+var chart2 = svg.append('g')
+  .attr('transform', 'translate(' + [width+200, 20]+')');
 var gender = [];
 var goingOut = [];
 var age = [];
@@ -39,9 +41,8 @@ var candyTooltip = d3.tip()
   .attr("class", "candy tooltip d3-tip")
   .offset([-12, 0])
   .html(function(d) {
-    console.log(d)
     return "<table><thead><tr><td>Candy Response</td><td>Perentage</td></tr></thead>" +
-      "<tbody><tr><td>" + d.key + "</td><td>" + Math.round(d.portion*100)+'%' + "</td></tr></tbody></table>";
+      "<tbody><tr><td>" + d[1].key + "</td><td>" + Math.round(d[0])+'%' + "</td></tr></tbody></table>";
   });
 svg.call(personTooltip)
 svg.call(candyTooltip)
@@ -157,6 +158,60 @@ function onSortChanged() {
   var value = select.options[select.selectedIndex].value;
   sorter = value;
   updateChart();
+}
+
+yScale2 = d3.scaleLinear()
+    .domain([.5, 48])
+    .range([9 * height / 10, 0])
+xScale2 = d3.scaleLinear()
+    .domain([0, 100])
+    .range([0, 4 * width / 10])
+  var xAxis2 = d3.axisBottom(xScale2).ticks(1);
+  chart2.append('g')
+    .attr('transform', 'translate(0,'+(9 * height / 10)+')')
+    .call(xAxis2);
+function createStackedBars(garray, index, key) {
+  var stackG = chart2.append('g').attr('class', function(d){
+      return 'id'+String(key);
+    });
+  var total = d3.sum(garray, function(d) { return d.values.length; });
+  var last = 0;
+  for (var i = 0; i < garray.length; i++) {
+    var d = garray[i];
+    var angle = (garray[i].values.length/total)*100;
+    stackG.append("rect")
+    .datum([angle, garray[i]])
+    .attr("class", 'stack')
+    .attr('y', yScale2(index+1.5))
+    .attr('x', xScale2(last))
+    .attr('height', 10)
+    .attr('width', xScale2(angle))
+    .attr("fill", function() {
+      if (d.key === "MEH") return "#ffc900";
+      else if (d.key === "DESPAIR") return "#ef473a";
+      else if (d.key === "JOY") return "#33cd5f";
+      else return "#387ef5";
+    })
+    .on("mouseover", function(d) {
+      d3.selectAll(".people").attr("opacity", hide);
+      d3.select(this).attr("opacity", 1)
+      d[1].values.forEach(function(d) {
+        d3.selectAll("#id" + String(d.identifier)).attr("opacity", 1);
+      });
+      candyTooltip.show(d);
+    })
+    .on("mouseout", function(d) {
+      d3.selectAll("rect").attr("opacity", 1);
+      candyTooltip.hide(d)
+    });
+    last = last +angle;
+  }
+  key = key.substr(3).replace(new RegExp("_", "g"), " ");
+   stackG.append("text")
+   .attr("transform", "translate("+(-102)+","+(yScale2(index+.75))+")")
+   .attr("text-anchor", "start")
+   .attr('font-size', '9')
+   .text(function(d){ return key;})
 }
 
 function updateXLabel(array) {
@@ -287,93 +342,9 @@ function defineSorter(a, b, type) {
   return a[type] > b[type];
 }
 
-function onCandyChanged() {
-  var candyVarName = $("#candyOptions").val()
-  var cummulative = 0; //Because d3.stack is hard to figure out
-  var toUse = []
-  candyObject[candyVarName].
-  sort(function(a, b) {
-    return a.key.localeCompare(b.key);
-  }).
-  forEach(function(d) {
-    var key;
-    if (d.key == -1) key = "No Response";
-    else key = d.key
-    toUse.push({
-      "key": key,
-      "portion": d.values.length / totalLengthOfData,
-      "length": d.values.length,
-      "cummulative": cummulative,
-      "cummulativePortion": cummulative / totalLengthOfData,
-      "original": d
-    })
-    cummulative += d.values.length;
-  })
-
-  var bar = d3.select("#candyBarGroup").selectAll(".bar.candy").data(toUse, function(d) {
-
-    return d.key;
-  })
-  var enteredBar = bar.enter()
-    .append("g")
-  bar.merge(enteredBar).transition().attr("transform", function(d) {
-
-      return "translate(" + String(d.cummulativePortion * width) + ", " + String(height - 25) + ")";
-    })
-    .attr("class", function(d) {
-      return d.key + " bar candy"
-    })
-  enteredBar.append("rect")
-    .attr("height", 25)
-    .on("mouseover", function(d) {
-      d3.selectAll(".people").attr("opacity", hide);
-      d3.select(this).attr("opacity", 1)
-      d.original.values.forEach(function(d) {
-        d3.selectAll("#id" + String(d.identifier)).attr("opacity", 1);
-      });
-      candyTooltip.show(d);
-    })
-    .on("mouseout", function(d) {
-      d3.selectAll("rect").attr("opacity", 1);
-      candyTooltip.hide(d)
-    })
-    .on("dblclick", function(d) {
-      var heldOntoVarName = $("#candyOptions").val()
-      chartG.selectAll("*").remove()
-      setup(false, d.original.values)
-      $("#candyOptions").val(heldOntoVarName)
-      onCandyChanged()
-    })
-
-  enteredBar.merge(bar).selectAll("rect").data(toUse,
-      function(d) {
-        return d.key;
-      })
-    .transition()
-    .attr("width", function(d) {
-      return d.portion * width;
-    })
-    .attr("fill", function(d) {
-      if (d.key === "MEH") return "#FFBD33";
-      else if (d.key === "DESPAIR") return "#C70039";
-      else if (d.key === "JOY") return "#75FF33";
-      else return "#0000FF"
-    })
-
-
-  enteredBar.append("text")
-    .text(function(d) {
-      if (d.key == -1) {
-        return "No Response"
-      }
-      return d.key
-    })
-    .attr("y", 20)
-  bar.exit().remove()
-}
-
 function defineColor(key) {
   currColors = [];
+  colorVarBin = []
   currColorLabels = [];
   d3.selectAll('rect.people')
     .attr('fill', function(d, i) {
@@ -381,23 +352,31 @@ function defineColor(key) {
         var temp = Math.floor(parseInt(d[key]) / 10);
         if (currColors.indexOf(fill(temp)) == -1) {
           if (!isNaN(temp)) {
-            currColors.push(fill(temp));
+            currColors.push(fill(temp))
+            colorVarBin.push([d])
             currColorLabels.push(temp);
           }
+        } else {
+          colorVarBin[currColorLabels.indexOf(temp)].push(d)
         }
       } else {
         var temp = d[key];
         if (currColors.indexOf(fill(temp)) == -1) {
           if (temp != undefined) {
             currColors.push(fill(temp));
+            colorVarBin.push([d])
             currColorLabels.push(temp);
           }
+        } else {
+          colorVarBin[currColorLabels.indexOf(temp)].push(d)
         }
       }
       return fill(temp);
     })
-  var colorLabel = chartG.selectAll('.colorLabel')
-    .data(currColors);
+  var colorLabel = chart1.selectAll('.colorLabel')
+    .data(currColors.map(function(d, i) {
+      return {'fill': d, 'data': colorVarBin[i]}
+    }));
   var enteredColor = colorLabel.enter().append('rect');
   colorLabel.merge(enteredColor)
     .attr('width', 15)
@@ -408,11 +387,18 @@ function defineColor(key) {
       return 100 + (15 * i);
     })
     .attr('fill', function(d, i) {
-      return d;
+      return d.fill;
+    }).on('mouseover', function(d) {
+      d3.selectAll(".people").attr("opacity", ".2")
+      d.data.forEach(function(person) {
+        d3.selectAll("#id" + String(person.identifier)).attr("opacity", "1")
+      })
+    }).on('mouseout', function(d) {
+      d3.selectAll(".people").attr("opacity", "1")
     });
   colorLabel.exit().remove();
 
-  var colorLabelN = chartG.selectAll('.colorLabelN')
+  var colorLabelN = chart1.selectAll('.colorLabelN')
     .data(currColorLabels);
   var enteredColorn = colorLabelN.enter().append('text');
   colorLabelN.merge(enteredColorn)
@@ -455,39 +441,43 @@ function setup(error, dataset) {
     console.error(error);
     return;
   }
-  chartG.selectAll('title').data(["CHART TITLE"]).enter().append('text').attr('x', width * .7).attr('y', -20).text(function(d) {
+  chart1.selectAll('title').data(["Candy Survey Participants", "Categorized By Demographics"]).enter().append('text').attr('x', width * .7).attr('y', function(d,i){return -20 + (i*20);}).attr('text-anchor', "middle").text(function(d) {
     return d;
   });
   totalLengthOfData = dataset.length;
   //CandyFrequencies and the pull down button setup
-  var candyVarName = Object.keys(dataset[0]).slice(7, 55) // The location of the candy names
-  var candyNames = candyVarName.map(function(d) {
-    return {
-      "varName": d,
-      "real": d.substr(3).replace(new RegExp("_", "g"), " ")
-    } // remove the Q6_ portion and any underscores
-  })
-  //Populate the select option for candy
-  for (var i = 0; i < candyNames.length; i++) {
-    var candyPullDown = d3.select("#candyOptions")
-      .append("option")
-      .text(candyNames[i].real)
-      .attr("value", candyNames[i].varName)
-  }
-  $("#candyOptions").val(candyNames[0].varName)
-  var allbins = Object.keys(dataset).map(function(keyName) {
-    return candyBins(dataset, keyName);
-  })
+  var candyVarName = Object.keys(dataset[0]).slice(7, 54) // The location of the candy names
   //Populate the global candyObject with the data for candies
   candyObject = {}
+  candyArr = [];
+  candyNames = [];
   candyVarName.forEach(function(d) {
     candyObject[d] = candyBins(dataset, d);
+    candyArr.push(candyBins(dataset, d));
+    candyNames.push(d);
   });
+  for (var i = 0; i < candyVarName.length; i++) {
+    var stack = candyObject[candyVarName[i]].sort(function(a,b){
+      if (a.key == b.key) {
+        return 0;
+      } else if (a.key == "JOY") {
+        return 1;
+      } else if (b.key == "JOY") {
+        return -1;
+      } else if (a.key == "MEH") {
+        return 1;
+      } else {
+        return -1;
+      }
+      return a.key>b.key;
+    })
+    createStackedBars(stack, i, candyVarName[i]);
+  }
   //DEMOGRAPHICS;
   gender = candyBins(dataset, 'Q2_GENDER');
   goingOut = candyBins(dataset, 'Q1_GOING_OUT');
   age = ageBins(dataset).sort(function(a, b) {
-    return parseInt(a.key) > parseInt(b.key);
+    return a.key - b.key;
   });
   country = candyBins(dataset, 'Q4_COUNTRY').sort(function(a, b) {
     return a.key > b.key;
@@ -495,7 +485,7 @@ function setup(error, dataset) {
     return parseInt(a.values.length) < parseInt(b.values.length);
   });
   state = candyBins(dataset, 'Q5_STATE_PROVINCE_COUNTY_ETC');
-  chartG.append('g')
+  chart1.append('g')
     .attr('class', 'x')
     .append('g')
     .attr('class', 'x axis');
@@ -508,8 +498,6 @@ function setup(error, dataset) {
   updateChart();
   defineColor('NONE');
   onColorChanged();
-  onCandyChanged();
-
 }
 
 function updateChart() {
@@ -518,11 +506,11 @@ function updateChart() {
   var xAxis = defineXAxis(currArray);
   updateXLabel(currArray);
 
-  chartG.selectAll('g.x.axis')
+  chart1.selectAll('g.x.axis')
     .attr('transform', 'translate(0,' + ((3 * height / 4) + 10) + ')')
     .call(xAxis);
 
-  var xlabel = chartG.select(".x").selectAll('.xLabels')
+  var xlabel = chart1.select(".x").selectAll('.xLabels')
     .data(xScaleLabels);
 
   var enteredXlabel = xlabel.enter().append('text');
@@ -538,7 +526,7 @@ function updateChart() {
     });
   xlabel.exit().remove();
 
-  var count = chartG.select(".x").selectAll('.counters')
+  var count = chart1.select(".x").selectAll('.counters')
     .data(currArray);
   var enteredCount = count.enter().append('text');
   count.merge(enteredCount).attr('x', function(d, i) {
@@ -561,7 +549,7 @@ function updateChart() {
     currArray[j].values.sort(function(a, b) {
       return defineSorter(a, b, sorter);
     });
-    var ppl = chartG.selectAll(".people")
+    var ppl = chart1.selectAll(".people")
       .data(currArray[j].values, function(d) {
         return d.identifier;
       });
@@ -576,25 +564,19 @@ function updateChart() {
         personTooltip.show(d);
         d3.selectAll('.people')
           .transition()
-          .attr('opacity', hide)
+          .attr("width", rectWidth)
+          .attr("height", rectWidth);
         d3.select(this)
           .transition()
           .attr("width", rectWidth * 3)
           .attr("height", rectWidth * 3)
-          .attr('opacity', 1)
-        d3.selectAll('.counters')
-          .attr('opacity', hide)
       })
       .on("mouseout", function(d) {
         personTooltip.hide(d)
         d3.selectAll('.people')
-          .attr('opacity', 1)
-        d3.selectAll('.people')
           .transition()
           .attr("width", rectWidth)
           .attr("height", rectWidth)
-        d3.selectAll('.counters')
-          .attr('opacity', 1)
       });
     ppl.merge(enteredPpl).transition().attr("x", function(d, i) {
         return xScale(j) - binWidth / 2 + ((rectWidth + 2) * (i % num));
@@ -606,8 +588,3 @@ function updateChart() {
       .attr("height", (rectWidth));
   }
 }
-
-$("#reset_graph").on("click", function() {
-  chartG.selectAll("*").remove();
-  setup(false, fullDataset);
-})
