@@ -10,7 +10,7 @@ svg {
 body {
     font-family: "Open Sans";
 }
-.x.axis path {
+.y-axis line, path {
 	opacity: 0;
 }
 .x.axis text {
@@ -41,7 +41,7 @@ body {
   font-size: 10px;
   width: 100%;
   line-height: 1;
-  color: rgba(240, 240, 240, 0.95);
+  color: #689bed;
   content: "\25BC";
   position: absolute;
   text-align: center;

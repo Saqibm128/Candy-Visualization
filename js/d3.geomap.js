@@ -407,7 +407,6 @@ var Geomap = (function () {
             d3.json(self.properties.geofile, function (error, geo) {
                 self.geo = geo;
                 self.svg.append('g').attr('class', 'units zoom').selectAll('path').data(topojson.feature(geo, geo.objects[self.properties.units]).features).enter().append('path').attr('class', function (d) {
-                    console.log(d)
                     return 'unit ' + self.properties.unitPrefix + d.properties.fips;
                 }).attr('d', self.path).on('click', self.clicked.bind(self)).append('title').text(self.properties.unitTitle);
                 self.update();
@@ -448,7 +447,7 @@ var Choropleth = (function (_Geomap) {
             colors: colorbrewer.OrRd[9],
             column: null,
             domain: null,
-            duration: null,
+            duration: 10,
             format: d3.format(',.02f'),
             legend: false,
             valueScale: d3.scale.quantize
