@@ -477,8 +477,10 @@ var Choropleth = (function (_Geomap) {
         }
     }, {
         key: 'update',
-        value: function update() {
-            var self = this;
+        value: function update(self) {
+            if (!self) {
+              var self = this;
+            }
             self.extent = d3.extent(self.data, self.columnVal.bind(self));
             self.colorScale = self.properties.valueScale().domain(self.properties.domain || self.extent).range(self.properties.colors);
 
@@ -492,7 +494,7 @@ var Choropleth = (function (_Geomap) {
                 // selectAll must be called and not just select, otherwise the data
                 // attribute of the selected path object is overwritten with self.data.
                 var unit = self.svg.selectAll('.' + self.properties.unitPrefix + "US"+  uid);
-
+                console.log(unit)
                 // Data can contain values for non existing units and values can be empty or NaN.
                 if (!unit.empty() && self.defined(val)) {
                     var fill = self.colorScale(val),

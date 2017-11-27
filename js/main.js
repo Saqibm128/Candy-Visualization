@@ -78,6 +78,23 @@ function candyBins(dataset, candy) {
   return bin;
 }
 
+function mapUpdate(dataset) {
+  console.log(dataset)
+  var data_by_states = []
+  for (var i = 1; i < 57; i++) {
+    var fips = String(i);
+    if (fips.length == 1) fips = "0" + fips; //weird fips encoding stuff
+    data_by_states[i-1] = {"fips": fips, "count": String(0)} //initialize all as 0
+  }
+  candyBins(dataset, "fips").forEach(function(bin) {
+    data_by_states[+bin.key-1] = {"fips":String(bin.key), "count":String(bin.values.length)}
+  })
+  d3.select('#map')
+      .datum(data_by_states);
+  map.data = data_by_states
+  map.update(map);
+}
+
 function mapSetup(dataset) {
   d3.select("#map").selectAll("*").remove()
   map = d3.geomap.choropleth()
@@ -186,10 +203,10 @@ function createStackedBars(garray, index, key) {
     .attr('x', xScale2(last))
     .attr('height', 10)
     .attr('width', xScale2(angle))
-    .attr("fill", function() {
-      if (d.key === "MEH") return "#ffc900";
-      else if (d.key === "DESPAIR") return "#ef473a";
-      else if (d.key === "JOY") return "#33cd5f";
+    .attr("fill", function(d) {
+      if (d[1].key === "MEH") return "#ffc900";
+      else if (d[1].key === "DESPAIR") return "#ef473a";
+      else if (d[1].key === "JOY") return "#33cd5f";
       else return "#387ef5";
     })
     .on("mouseover", function(d) {
@@ -199,10 +216,12 @@ function createStackedBars(garray, index, key) {
         d3.selectAll("#id" + String(d.identifier)).attr("opacity", 1);
       });
       candyTooltip.show(d);
+      mapUpdate(d[1].values);
     })
     .on("mouseout", function(d) {
       d3.selectAll("rect").attr("opacity", 1);
-      candyTooltip.hide(d)
+      candyTooltip.hide(d);
+      mapUpdate(fullDataset);
     });
     last = last +angle;
   }
