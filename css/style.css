@@ -38,10 +38,15 @@ body {
 .d3-tip:after {
   box-sizing: border-box;
   display: inline;
-  font-size: 10px;
+  font-size: 20px;
   width: 100%;
+<<<<<<< HEAD
   line-height: 1;
   color: rgba(240, 240, 240, 0.95);
+=======
+  line-height: .5;
+  color: #b0cdfc;
+>>>>>>> 610be53cba01c3475cf490381e708aa838551dd3
   content: "\25BC";
   position: absolute;
   text-align: center;

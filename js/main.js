@@ -78,6 +78,23 @@ function candyBins(dataset, candy) {
   return bin;
 }
 
+function mapUpdate(dataset) {
+  console.log(dataset)
+  var data_by_states = []
+  for (var i = 1; i < 57; i++) {
+    var fips = String(i);
+    if (fips.length == 1) fips = "0" + fips; //weird fips encoding stuff
+    data_by_states[i-1] = {"fips": fips, "count": String(0)} //initialize all as 0
+  }
+  candyBins(dataset, "fips").forEach(function(bin) {
+    data_by_states[+bin.key-1] = {"fips":String(bin.key), "count":String(bin.values.length)}
+  })
+  d3.select('#map')
+      .datum(data_by_states);
+  map.data = data_by_states
+  map.update(map);
+}
+
 function mapSetup(dataset) {
   d3.select("#map").selectAll("*").remove()
   map = d3.geomap.choropleth()
@@ -186,10 +203,10 @@ function createStackedBars(garray, index, key) {
     .attr('x', xScale2(last))
     .attr('height', 10)
     .attr('width', xScale2(angle))
-    .attr("fill", function() {
-      if (d.key === "MEH") return "#ffc900";
-      else if (d.key === "DESPAIR") return "#ef473a";
-      else if (d.key === "JOY") return "#33cd5f";
+    .attr("fill", function(d) {
+      if (d[1].key === "MEH") return "#ffc900";
+      else if (d[1].key === "DESPAIR") return "#ef473a";
+      else if (d[1].key === "JOY") return "#33cd5f";
       else return "#387ef5";
     })
     .on("mouseover", function(d) {
@@ -199,10 +216,12 @@ function createStackedBars(garray, index, key) {
         d3.selectAll("#id" + String(d.identifier)).attr("opacity", 1);
       });
       candyTooltip.show(d);
+      mapUpdate(d[1].values);
     })
     .on("mouseout", function(d) {
       d3.selectAll("rect").attr("opacity", 1);
-      candyTooltip.hide(d)
+      candyTooltip.hide(d);
+      mapUpdate(fullDataset);
     });
     last = last +angle;
   }
@@ -344,6 +363,7 @@ function defineSorter(a, b, type) {
 
 function defineColor(key) {
   currColors = [];
+  colorVarBin = []
   currColorLabels = [];
   d3.selectAll('rect.people')
     .attr('fill', function(d, i) {
@@ -351,23 +371,31 @@ function defineColor(key) {
         var temp = Math.floor(parseInt(d[key]) / 10);
         if (currColors.indexOf(fill(temp)) == -1) {
           if (!isNaN(temp)) {
-            currColors.push(fill(temp));
+            currColors.push(fill(temp))
+            colorVarBin.push([d])
             currColorLabels.push(temp);
           }
+        } else {
+          colorVarBin[currColorLabels.indexOf(temp)].push(d)
         }
       } else {
         var temp = d[key];
         if (currColors.indexOf(fill(temp)) == -1) {
           if (temp != undefined) {
             currColors.push(fill(temp));
+            colorVarBin.push([d])
             currColorLabels.push(temp);
           }
+        } else {
+          colorVarBin[currColorLabels.indexOf(temp)].push(d)
         }
       }
       return fill(temp);
     })
   var colorLabel = chart1.selectAll('.colorLabel')
-    .data(currColors);
+    .data(currColors.map(function(d, i) {
+      return {'fill': d, 'data': colorVarBin[i]}
+    }));
   var enteredColor = colorLabel.enter().append('rect');
   colorLabel.merge(enteredColor)
     .attr('width', 15)
@@ -378,7 +406,14 @@ function defineColor(key) {
       return 100 + (15 * i);
     })
     .attr('fill', function(d, i) {
-      return d;
+      return d.fill;
+    }).on('mouseover', function(d) {
+      d3.selectAll(".people").attr("opacity", ".2")
+      d.data.forEach(function(person) {
+        d3.selectAll("#id" + String(person.identifier)).attr("opacity", "1")
+      })
+    }).on('mouseout', function(d) {
+      d3.selectAll(".people").attr("opacity", "1")
     });
   colorLabel.exit().remove();
 
@@ -431,7 +466,6 @@ function setup(error, dataset) {
   totalLengthOfData = dataset.length;
   //CandyFrequencies and the pull down button setup
   var candyVarName = Object.keys(dataset[0]).slice(7, 54) // The location of the candy names
-  console.log(candyVarName);
   //Populate the global candyObject with the data for candies
   candyObject = {}
   candyArr = [];
@@ -462,7 +496,7 @@ function setup(error, dataset) {
   gender = candyBins(dataset, 'Q2_GENDER');
   goingOut = candyBins(dataset, 'Q1_GOING_OUT');
   age = ageBins(dataset).sort(function(a, b) {
-    return parseInt(a.key) > parseInt(b.key);
+    return a.key - b.key;
   });
   country = candyBins(dataset, 'Q4_COUNTRY').sort(function(a, b) {
     return a.key > b.key;
