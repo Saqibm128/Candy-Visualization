@@ -231,6 +231,33 @@ function createStackedBars(garray, index, key) {
     });
     last = last +angle;
   }
+
+      var colorLabel = chart2.selectAll('.barcolorLabel')
+        .data(["#ffc900","#ef473a","#33cd5f","#387ef5"]);
+      var enteredColor = colorLabel.enter().append('rect');
+      colorLabel.merge(enteredColor)
+        .attr('width', 15)
+        .attr('height', 15)
+        .attr('x', 300)
+        .attr('class', 'barcolorLabel')
+        .attr('y', function(d, i) {
+          return 200 + (15 * i);
+        })
+        .attr('fill', function(d, i) {
+          return d;
+        })
+      var colorLabelN = chart2.selectAll('.barcolorLabelN')
+          .data(["Meh","Despair","Joy","No Response"]);
+        var enteredColorn = colorLabelN.enter().append('text');
+        colorLabelN.merge(enteredColorn)
+          .attr('class', 'barcolorLabelN')
+          .attr('x', (300) + 20)
+          .attr('y', function(d, i) {
+            return 213 + (15 * i);
+          })
+          .text(function(d, i) {
+              return d;
+          });
   var newkey = key.substr(3).replace(new RegExp("_", "g"), " ");
    stackG.append("text")
    .attr("transform", "translate("+(-102)+","+(yScale2(index+.75))+")")
@@ -261,7 +288,7 @@ function createStackedBars(garray, index, key) {
     }  
     clicked = this;
     currColors = ["#ffc900", "#ef473a", "#33cd5f","#387ef5"];
-    currColorLabels = ["Meh", "Joy", "Despair", "No Response"];
+    currColorLabels = ["Meh", "Despair","Joy", "No Response"];
     d3.selectAll("rect.people")
       .attr('fill', function(d){
         if (d[key] === "MEH") return "#ffc900";
@@ -272,7 +299,7 @@ function createStackedBars(garray, index, key) {
 
       var colorLabel = chart1.selectAll('.colorLabel')
         .data(currColors.map(function(d, i) {
-          return {'fill': d, 'data': colorVarBin[i]}
+          return {'fill': d, 'data': []} //FIX THIS!!!
         }));
       var enteredColor = colorLabel.enter().append('rect');
       colorLabel.merge(enteredColor)
@@ -304,17 +331,9 @@ function createStackedBars(garray, index, key) {
             return 113 + (15 * i);
           })
           .text(function(d, i) {
-            var temp = d;
-            if (temp < 0) {
-              return 'Unknown';
-            } else if (temp >= 0) {
-              temp = (parseInt(temp) * 10) + ' - ' + (parseInt(temp) * 10 + 10);
-            }
-            return temp;
+            return d;
           });
         colorLabelN.exit().remove();
-
-
    })
 }
 
