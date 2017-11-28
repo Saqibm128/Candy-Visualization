@@ -24,6 +24,7 @@ var currColorLabels = [];
 var sorter = 'NONE';
 var currArray = [];
 // Subcandy bar
+var clicked = null;
 var candyObject;
 var totalLengthOfData;
 var fullDataset;
@@ -166,6 +167,11 @@ function onColorChanged() {
   } else {
     fill = d3.scaleOrdinal(d3.schemeCategory10);
   }
+  if (clicked != null) {
+    d3.select(clicked)
+          .attr("stroke", 'null')
+    clicked = null;
+  }
   defineColor(value);
 }
 
@@ -232,13 +238,30 @@ function createStackedBars(garray, index, key) {
    .attr('font-size', '9')
    .text(function(d){ return newkey;})
    stackG.append("rect")
-   .attr("transform", "translate("+(-105)+","+(yScale2(index+1.5))+")")
+   .attr('class', 'candyNrect')
+   .attr("transform", "translate("+(-105)+","+(yScale2(index+1.6))+")")
    .attr("width", 100)
-   .attr("height", 13)
-   .attr("opacity", 0)
+   .attr("height", 12)
+   .attr("fill-opacity", 0)
+   .attr('stroke', "null")
+   .on('mouseover', function(d){
+      d3.select(this)
+        .attr("stroke", '#ff0000')
+   })
+   .on('mouseout', function(d){
+      if(this != clicked) {
+        d3.select(this)
+          .attr("stroke", 'null')
+      }
+   })
    .on('click', function(d){
+    if (clicked != null) {
+      d3.select(clicked)
+            .attr("stroke", 'null')
+    }  
+    clicked = this;
     currColors = ["#ffc900", "#ef473a", "#33cd5f","#387ef5"];
-    currColorLabels = ["MEH", "JOY", "DESPAIR", "No Response"];
+    currColorLabels = ["Meh", "Joy", "Despair", "No Response"];
     d3.selectAll("rect.people")
       .attr('fill', function(d){
         if (d[key] === "MEH") return "#ffc900";
