@@ -289,9 +289,10 @@ function createStackedBars(dataset) {
   }).each(function(d) {
     var singleBar = d3.select(this).selectAll('.singleBar').data(d.val, function(d) {return d.key})
     var enteredBar = singleBar.enter().append("rect").attr("class", '.singleBar')
-    enteredBar.append("text").text(function(d) {
-      return d.key;
+    d3.select(this).append("text").text(function(d) {
+      return d.key.substr(3).replace(new RegExp("_", "g"), " ").replace("M M", "M&M");
     }).attr("transform", "translate(-200, 0)")
+    .attr("class", "candy text")
     singleBar.merge(enteredBar).attr('x',
     function(d) {
       console.log()
