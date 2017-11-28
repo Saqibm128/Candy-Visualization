@@ -42,6 +42,10 @@ var candyTooltip = d3.tip()
   .attr("class", "candy tooltip d3-tip")
   .offset([-15, 0])
   .html(function(d) {
+    if (d[1].key ==-1){
+      return "<table><thead><tr><td>Candy Response</td><td>Perentage</td></tr></thead>" +
+      "<tbody><tr><td>" + "No Response" + "</td><td>" + Math.round(d[0])+'%' + "</td></tr></tbody></table>";
+    }
     return "<table><thead><tr><td>Candy Response</td><td>Perentage</td></tr></thead>" +
       "<tbody><tr><td>" + d[1].key + "</td><td>" + Math.round(d[0])+'%' + "</td></tr></tbody></table>";
   });
@@ -49,6 +53,66 @@ svg.call(personTooltip)
 svg.call(candyTooltip)
 
 //////FUNCTIONS
+
+  //sorters
+function sortDespair(a,b) {
+  if (a.key == b.key) {
+    return 0;
+  } else if (a.key == "JOY") {
+    return 1;
+  } else if (b.key == "JOY") {
+    return -1;
+  } else if (a.key == "MEH") {
+    return 1;
+  } else {
+    return -1;
+  }
+  return a.key>b.key;
+}
+function sortJoy(a,b) {
+  if (a.key == b.key) {
+    return 0;
+  } else if (a.key == "JOY") {
+    return 1;
+  } else if (b.key == "JOY") {
+    return -1;
+  } else if (a.key == "MEH") {
+    return 1;
+  } else {
+    return -1;
+  }
+  return a.key>b.key;
+}
+function sortMeh(a,b) {
+  if (a.key == b.key) {
+    return 0;
+  } else if (a.key == "JOY") {
+    return 1;
+  } else if (b.key == "JOY") {
+    return -1;
+  } else if (a.key == "MEH") {
+    return 1;
+  } else {
+    return -1;
+  }
+  return a.key>b.key;
+}
+function sortNoResponse(a,b) {
+  if (a.key == b.key) {
+    return 0;
+  } else if (a.key == "JOY") {
+    return 1;
+  } else if (b.key == "JOY") {
+    return -1;
+  } else if (a.key == "MEH") {
+    return 1;
+  } else {
+    return -1;
+  }
+  return a.key>b.key;
+}
+
+
 function cleanData(string) {
   if (string == "") {
     return -1;
@@ -248,16 +312,28 @@ function createStackedBars(garray, index, key) {
         })
       var colorLabelN = chart2.selectAll('.barcolorLabelN')
           .data(["Meh","Despair","Joy","No Response"]);
-        var enteredColorn = colorLabelN.enter().append('text');
-        colorLabelN.merge(enteredColorn)
-          .attr('class', 'barcolorLabelN')
-          .attr('x', (300) + 20)
-          .attr('y', function(d, i) {
-            return 213 + (15 * i);
-          })
-          .text(function(d, i) {
-              return d;
-          });
+      var enteredColorn = colorLabelN.enter().append('text');
+      colorLabelN.merge(enteredColorn)
+        .attr('class', 'barcolorLabelN')
+        .attr('x', (300) + 20)
+        .attr('y', function(d, i) {
+          return 213 + (15 * i);
+        })
+        .text(function(d, i) {
+            return d;
+        });
+      var colorSelect = chart2.selectAll('.barselectLabel')
+        .data(["MEH","DESPAIR","JOY","-1"]);
+      var enteredSelect = colorSelect.enter().append('rect');
+      colorSelect.merge(enteredSelect)
+        .attr('width', 100)
+        .attr('height', 15)
+        .attr('x', 300)
+        .attr('class', 'barcolorLabel')
+        .attr('y', function(d, i) {
+          return 200 + (15 * i);
+        })
+
   var newkey = key.substr(3).replace(new RegExp("_", "g"), " ");
    stackG.append("text")
    .attr("transform", "translate("+(-102)+","+(yScale2(index+.75))+")")
@@ -580,20 +656,7 @@ function setup(error, dataset) {
     candyNames.push(d);
   });
   for (var i = 0; i < candyVarName.length; i++) {
-    var stack = candyObject[candyVarName[i]].sort(function(a,b){
-      if (a.key == b.key) {
-        return 0;
-      } else if (a.key == "JOY") {
-        return 1;
-      } else if (b.key == "JOY") {
-        return -1;
-      } else if (a.key == "MEH") {
-        return 1;
-      } else {
-        return -1;
-      }
-      return a.key>b.key;
-    })
+    var stack = candyObject[candyVarName[i]].sort(function(a,b){ return sortDespair(a,b);})
     createStackedBars(stack, i, candyVarName[i]);
   }
   //DEMOGRAPHICS;
