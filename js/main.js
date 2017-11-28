@@ -20,7 +20,7 @@ var rectWidth = 3;
 var binWidth;
 var fill = d3.scaleOrdinal(d3.schemeCategory10);
 var currColors = [];
-var currColorLabels = []
+var currColorLabels = [];
 var sorter = 'NONE';
 var currArray = [];
 // Subcandy bar
@@ -237,6 +237,8 @@ function createStackedBars(garray, index, key) {
    .attr("height", 13)
    .attr("opacity", 0)
    .on('click', function(d){
+    currColors = ["#ffc900", "#ef473a", "#33cd5f","#387ef5"];
+    currColorLabels = ["MEH", "JOY", "DESPAIR", "No Response"];
     d3.selectAll("rect.people")
       .attr('fill', function(d){
         if (d[key] === "MEH") return "#ffc900";
@@ -244,6 +246,52 @@ function createStackedBars(garray, index, key) {
         else if (d[key] === "JOY") return "#33cd5f";
         else return "#387ef5";        
       })
+
+      var colorLabel = chart1.selectAll('.colorLabel')
+        .data(currColors.map(function(d, i) {
+          return {'fill': d, 'data': colorVarBin[i]}
+        }));
+      var enteredColor = colorLabel.enter().append('rect');
+      colorLabel.merge(enteredColor)
+        .attr('width', 15)
+        .attr('height', 15)
+        .attr('x', 2.2 * width / 3)
+        .attr('class', 'colorLabel')
+        .attr('y', function(d, i) {
+          return 100 + (15 * i);
+        })
+        .attr('fill', function(d, i) {
+          return d.fill;
+        }).on('mouseover', function(d) {
+          d3.selectAll(".people").attr("opacity", ".2")
+          d.data.forEach(function(person) {
+            d3.selectAll("#id" + String(person.identifier)).attr("opacity", "1")
+          })
+        }).on('mouseout', function(d) {
+          d3.selectAll(".people").attr("opacity", "1")
+        });
+      colorLabel.exit().remove();
+      var colorLabelN = chart1.selectAll('.colorLabelN')
+          .data(currColorLabels);
+        var enteredColorn = colorLabelN.enter().append('text');
+        colorLabelN.merge(enteredColorn)
+          .attr('class', 'colorLabelN')
+          .attr('x', (2.2 * width / 3) + 20)
+          .attr('y', function(d, i) {
+            return 113 + (15 * i);
+          })
+          .text(function(d, i) {
+            var temp = d;
+            if (temp < 0) {
+              return 'Unknown';
+            } else if (temp >= 0) {
+              temp = (parseInt(temp) * 10) + ' - ' + (parseInt(temp) * 10 + 10);
+            }
+            return temp;
+          });
+        colorLabelN.exit().remove();
+
+
    })
 }
 
