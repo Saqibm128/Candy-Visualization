@@ -494,7 +494,6 @@ var Choropleth = (function (_Geomap) {
                 // selectAll must be called and not just select, otherwise the data
                 // attribute of the selected path object is overwritten with self.data.
                 var unit = self.svg.selectAll('.' + self.properties.unitPrefix + "US"+  uid);
-                console.log(unit)
                 // Data can contain values for non existing units and values can be empty or NaN.
                 if (!unit.empty() && self.defined(val)) {
                     var fill = self.colorScale(val),

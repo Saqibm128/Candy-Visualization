@@ -2,12 +2,11 @@
 var svg = d3.select('svg');
 var height = svg.attr('height');
 var width = 710;//svg.attr('width');
-var people = svg.append('g').attr('class', 'people');
 ///CHART1
 var chart1 = svg.append('g')
-  .attr('transform', 'translate(' + [width / 20, height / 10] + ')');
+  .attr('transform', 'translate(' + [width / 20, height / 10] + ')').attr("class","peopleG");
 var chart2 = svg.append('g')
-  .attr('transform', 'translate(' + [width+200, 20]+')');
+  .attr('transform', 'translate(' + [width+200, 20]+')').attr("class", "candybar");
 var gender = [];
 var goingOut = [];
 var age = [];
@@ -42,10 +41,55 @@ var candyTooltip = d3.tip()
   .offset([-12, 0])
   .html(function(d) {
     return "<table><thead><tr><td>Candy Response</td><td>Perentage</td></tr></thead>" +
-      "<tbody><tr><td>" + d[1].key + "</td><td>" + Math.round(d[0])+'%' + "</td></tr></tbody></table>";
+      "<tbody><tr><td>" + d.key + "</td><td>" + Math.round(d.values.length/d.values.total * 100)+'%' + "</td></tr></tbody></table>";
+  });
+var brushG;
+var brush = d3.brushX()
+  .extent([[0, 0],[.9 * width, height]])
+  .on("start", function(d){
+    d3.selectAll(".people").classed("hidden", false);
+    if (this != brushG) {
+      // Clear the old brush
+      brush.move(d3.select(brushG), null);
+      brushG = this;
+    }
+  })
+  .on("brush", function(d){
+    d3.selectAll(".people").attr("opacity", hide)
+    var toUpdate = []
+    var e = d3.event.selection;
+    if (e) {
+      d.forEach(function(personData) {
+        var personRect = d3.select("#id" + String(personData.identifier))
+        if (e[0] < personRect.attr('x') && e[1] > personRect.attr('x')) {
+          toUpdate.push(personData)
+          personRect.attr("opacity", 1)
+        }
+      })
+      createStackedBars(toUpdate)
+    }
+  })
+  .on("end", function(d){
+    d3.selectAll(".people").attr("opacity", hide)
+    var toUpdate = []
+    var e = d3.event.selection;
+    if (e) {
+      d.forEach(function(personData) {
+        var personRect = d3.select("#id" + String(personData.identifier))
+        if (e[0] < personRect.attr('x') && e[1] > personRect.attr('x')) {
+          toUpdate.push(personData)
+          personRect.attr("opacity", 1)
+        }
+      })
+      createStackedBars(toUpdate)
+    } else {
+      d3.selectAll(".people").attr("opacity", 1)
+      createStackedBars(fullDataset)
+    }
   });
 svg.call(personTooltip)
 svg.call(candyTooltip)
+chart1.call(brush);
 
 //////FUNCTIONS
 function cleanData(string) {
@@ -57,6 +101,9 @@ function cleanData(string) {
 }
 
 function candyBins(dataset, candy) {
+  if ((dataset) == 'undefined' || dataset.length == 0) {
+    dataset = fullDataset
+  }
   var bin = [];
   var keys = [];
   for (var i = 0; i < dataset.length; i++) {
@@ -186,51 +233,100 @@ xScale2 = d3.scaleLinear()
   var xAxis2 = d3.axisBottom(xScale2).ticks(1);
   chart2.append('g')
     .attr('transform', 'translate(0,'+(9 * height / 10)+')')
+    .attr('class', 'x axis candy')
     .call(xAxis2);
-function createStackedBars(garray, index, key) {
-  var stackG = chart2.append('g').attr('class', function(d){
-      return 'id'+String(key);
-    });
-  var total = d3.sum(garray, function(d) { return d.values.length; });
-  var last = 0;
-  for (var i = 0; i < garray.length; i++) {
-    var d = garray[i];
-    var angle = (garray[i].values.length/total)*100;
-    stackG.append("rect")
-    .datum([angle, garray[i]])
-    .attr("class", 'stack')
-    .attr('y', yScale2(index+1.5))
-    .attr('x', xScale2(last))
-    .attr('height', 10)
-    .attr('width', xScale2(angle))
-    .attr("fill", function(d) {
-      if (d[1].key === "MEH") return "#ffc900";
-      else if (d[1].key === "DESPAIR") return "#ef473a";
-      else if (d[1].key === "JOY") return "#33cd5f";
-      else return "#387ef5";
+function createStackedBars(dataset) {
+  var candyVarName = Object.keys(dataset[0]).slice(7, 54) // The location of the candy names
+  //Populate the global candyObject with the data for candies
+  candyVarName.forEach(function(d) {
+    candyObject[d] = candyBins(dataset, d);
+    candyArr.push(candyBins(dataset, d));
+    candyNames.push(d);
+  });
+  for (var i = 0; i < candyVarName.length; i++) {
+    candyObject[candyVarName[i]] = candyObject[candyVarName[i]].sort(function(a,b){
+      if (a.key == b.key) {
+        return 0;
+      } else if (a.key == "JOY") {
+        return 1;
+      } else if (b.key == "JOY") {
+        return -1;
+      } else if (a.key == "MEH") {
+        return 1;
+      } else {
+        return -1;
+      }
+      return a.key>b.key;
     })
-    .on("mouseover", function(d) {
-      d3.selectAll(".people").attr("opacity", hide);
-      d3.select(this).attr("opacity", 1)
-      d[1].values.forEach(function(d) {
-        d3.selectAll("#id" + String(d.identifier)).attr("opacity", 1);
-      });
-      candyTooltip.show(d);
-      mapUpdate(d[1].values);
-    })
-    .on("mouseout", function(d) {
-      d3.selectAll("rect").attr("opacity", 1);
-      candyTooltip.hide(d);
-      mapUpdate(fullDataset);
-    });
-    last = last +angle;
   }
-  key = key.substr(3).replace(new RegExp("_", "g"), " ");
-   stackG.append("text")
-   .attr("transform", "translate("+(-102)+","+(yScale2(index+.75))+")")
-   .attr("text-anchor", "start")
-   .attr('font-size', '9')
-   .text(function(d){ return key;})
+  candyArr = Object.keys(candyObject)
+    .map(function (name) {
+      var accumulated = 0;
+      toReturn = {'val':candyObject[name], 'key': name};
+      var total = 0;
+      toReturn.val.forEach(function(d) {
+        total += d.values.length;
+      })
+      toReturn.total = total;
+      toReturn.val.forEach(function(d) {
+        d.cumm = accumulated;
+        d.total = total;
+        accumulated += d.values.length;
+      })
+      return toReturn;
+    })
+    .sort(function(a, b) {
+      return a.val[2].length - b.val[2].length;
+    })
+  var stackG = chart2.append('g').attr("class", "chart2");
+  var bars = stackG.selectAll(".stackedBarsG").data(candyArr,
+    function(d) {
+      return d.key
+    });
+  var enteredBars = bars.enter().append("g").attr('class', 'stackedBarsG');
+  enteredBars.merge(bars).attr("transform", function(d, i) {
+    return "translate(0," + String(yScale2(i + 1.5)) + ")"
+  }).each(function(d) {
+    var singleBar = d3.select(this).selectAll('.singleBar').data(d.val, function(d) {return d.key})
+    var enteredBar = singleBar.enter().append("rect").attr("class", '.singleBar')
+    enteredBar.append("text").text(function(d) {
+      return d.key;
+    }).attr("transform", "translate(-200, 0)")
+    singleBar.merge(enteredBar).attr('x',
+    function(d) {
+      console.log()
+      return d.cumm / d.total *  285
+    })
+      .attr('height', 5)
+      .attr('width', function(d) {
+        return d.values.length / d.total * 285
+      })
+      .attr("fill", function(d) {
+        if (d.key === "MEH") return "#ffc900";
+        else if (d.key === "DESPAIR") return "#ef473a";
+        else if (d.key === "JOY") return "#33cd5f";
+        else return "#387ef5";
+      })
+      .on("mouseover", function(d) {
+        d3.selectAll(".people").attr("opacity", hide);
+        d3.select(this).attr("opacity", 1)
+        d.values.forEach(function(d) {
+          d3.selectAll("#id" + String(d.identifier)).attr("opacity", 1);
+        });
+        candyTooltip.show(d);
+        mapUpdate(d.values);
+      })
+      .on("mouseout", function(d) {
+        d3.selectAll("rect").attr("opacity", 1);
+        candyTooltip.hide(d);
+        mapUpdate(fullDataset);
+      });
+  })
+
+    // stackG.append("rect")
+    // .attr("class", 'stack')
+    // .attr('y', yScale2(index+1.5))
+
 }
 
 function updateXLabel(array) {
@@ -460,38 +556,17 @@ function setup(error, dataset) {
     console.error(error);
     return;
   }
+  chart1.datum(dataset)
   chart1.selectAll('title').data(["Candy Survey Participants", "Categorized By Demographics"]).enter().append('text').attr('x', width * .7).attr('y', function(d,i){return -20 + (i*20);}).attr('text-anchor', "middle").text(function(d) {
     return d;
   });
   totalLengthOfData = dataset.length;
   //CandyFrequencies and the pull down button setup
-  var candyVarName = Object.keys(dataset[0]).slice(7, 54) // The location of the candy names
-  //Populate the global candyObject with the data for candies
   candyObject = {}
   candyArr = [];
   candyNames = [];
-  candyVarName.forEach(function(d) {
-    candyObject[d] = candyBins(dataset, d);
-    candyArr.push(candyBins(dataset, d));
-    candyNames.push(d);
-  });
-  for (var i = 0; i < candyVarName.length; i++) {
-    var stack = candyObject[candyVarName[i]].sort(function(a,b){
-      if (a.key == b.key) {
-        return 0;
-      } else if (a.key == "JOY") {
-        return 1;
-      } else if (b.key == "JOY") {
-        return -1;
-      } else if (a.key == "MEH") {
-        return 1;
-      } else {
-        return -1;
-      }
-      return a.key>b.key;
-    })
-    createStackedBars(stack, i, candyVarName[i]);
-  }
+  createStackedBars(dataset);
+
   //DEMOGRAPHICS;
   gender = candyBins(dataset, 'Q2_GENDER');
   goingOut = candyBins(dataset, 'Q1_GOING_OUT');
@@ -507,7 +582,7 @@ function setup(error, dataset) {
   chart1.append('g')
     .attr('class', 'x')
     .append('g')
-    .attr('class', 'x axis');
+    .attr('class', 'x axis persons');
 
   document.getElementById('xScaleSelect').value = 'age';
   document.getElementById('colorSelect').value = 'NONE';
