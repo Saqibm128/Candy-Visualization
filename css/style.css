@@ -40,8 +40,8 @@ body {
   display: inline;
   font-size: 20px;
   width: 100%;
-  line-height: .5;
-  color: #b0cdfc;
+  line-height: 1;
+  color: rgba(240, 240, 240, 0.95);
   content: "\25BC";
   position: absolute;
   text-align: center;
