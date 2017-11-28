@@ -32,14 +32,14 @@ var map;
 
 var personTooltip = d3.tip()
   .attr("class", "person tooltip d3-tip")
-  .offset([-12, 0])
+  .offset([-20, 0])
   .html(function(d) {
     return "<table><thead><tr><td>Gender</td><td>Age</td><td>Country</td></tr></thead>" +
       "<tbody><tr><td>" + d.Q2_GENDER + "</td><td>" + d.Q3_AGE + "</td><td>" + d.Q4_COUNTRY + "</td></tr></tbody></table>";
   });
 var candyTooltip = d3.tip()
   .attr("class", "candy tooltip d3-tip")
-  .offset([-12, 0])
+  .offset([-15, 0])
   .html(function(d) {
     return "<table><thead><tr><td>Candy Response</td><td>Perentage</td></tr></thead>" +
       "<tbody><tr><td>" + d[1].key + "</td><td>" + Math.round(d[0])+'%' + "</td></tr></tbody></table>";
@@ -79,7 +79,6 @@ function candyBins(dataset, candy) {
 }
 
 function mapUpdate(dataset) {
-  console.log(dataset)
   var data_by_states = []
   for (var i = 1; i < 57; i++) {
     var fips = String(i);
@@ -219,18 +218,33 @@ function createStackedBars(garray, index, key) {
       mapUpdate(d[1].values);
     })
     .on("mouseout", function(d) {
-      d3.selectAll("rect").attr("opacity", 1);
+      d3.selectAll("rect.people").attr("opacity", 1);
+      d3.selectAll("rect.stack").attr("opacity", 1);
       candyTooltip.hide(d);
       mapUpdate(fullDataset);
     });
     last = last +angle;
   }
-  key = key.substr(3).replace(new RegExp("_", "g"), " ");
+  var newkey = key.substr(3).replace(new RegExp("_", "g"), " ");
    stackG.append("text")
    .attr("transform", "translate("+(-102)+","+(yScale2(index+.75))+")")
    .attr("text-anchor", "start")
    .attr('font-size', '9')
-   .text(function(d){ return key;})
+   .text(function(d){ return newkey;})
+   stackG.append("rect")
+   .attr("transform", "translate("+(-105)+","+(yScale2(index+1.5))+")")
+   .attr("width", 100)
+   .attr("height", 13)
+   .attr("opacity", 0)
+   .on('click', function(d){
+    d3.selectAll("rect.people")
+      .attr('fill', function(d){
+        if (d[key] === "MEH") return "#ffc900";
+        else if (d[key] === "DESPAIR") return "#ef473a";
+        else if (d[key] === "JOY") return "#33cd5f";
+        else return "#387ef5";        
+      })
+   })
 }
 
 function updateXLabel(array) {
