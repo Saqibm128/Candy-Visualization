@@ -356,8 +356,8 @@ function createStackedBars(dataset) {
     })
     .attr("transform", "translate(-150, 9)")
     .attr('fill', function(d){
-      console.log(clicked);
       if ((clicked!=null)&&(d.key == d3.select(clicked).data()[0].key)) {
+        clicked = this;
         return '#ff0000';
       }
       return '#000000';
