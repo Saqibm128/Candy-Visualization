@@ -356,6 +356,7 @@ function createStackedBars(dataset) {
     })
     .attr("transform", "translate(-200, 9)")
     .attr("class", "candytext")
+    .attr("font-size", '12px')
     .on('mouseover', function(d){
       document.body.style.cursor = 'default'
       d3.select(this)
@@ -400,6 +401,7 @@ function createStackedBars(dataset) {
       return d.cumm / d.total *  285
     })
       .attr('height', 9)
+      .attr('y', 0)
       .attr('width', function(d) {
         return d.values.length / d.total * 285
       })
