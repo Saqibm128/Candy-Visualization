@@ -51,7 +51,7 @@ var candyTooltip = d3.tip()
   });
 var brushG;
 var brush = d3.brushX()
-  .extent([[0, 0],[.9 * width, height * (2.27) / 3]])
+  .extent([[0, -50],[.9 * width, height * (2.27) / 3]])
   .on("start", function(d){
     d3.selectAll(".people").classed("hidden", false);
     if (this != brushG) {
@@ -63,7 +63,7 @@ var brush = d3.brushX()
   .on("brush", function(d){
     d3.selectAll(".people").attr("opacity", hide)
     var toUpdate = []
-    var e = d3.event.selection;
+    e = d3.event.selection;
     if (e) {
       d.forEach(function(personData) {
         var personRect = d3.select("#id" + String(personData.identifier))
@@ -309,7 +309,10 @@ xScale2 = d3.scaleLinear()
     .attr('class', 'x axis candy')
     .call(xAxis2);
 function createStackedBars(dataset) {
-  d3.selectAll(".candytext").remove(); //FIX THIS
+  var selected = d3.selectAll(".candytext")
+  if (selected != undefined) {
+    selected.remove(); //FIX THIS
+  }
   var candyVarName = Object.keys(dataset[0]).slice(7, 54) // The location of the candy names
   //Populate the global candyObject with the data for candies
   candyVarName.forEach(function(d) {
@@ -347,7 +350,7 @@ function createStackedBars(dataset) {
     });
   var enteredBars = bars.enter().append("g").attr('class', 'stackedBarsG');
   enteredBars.merge(bars).transition().attr("transform", function(d, i) {
-    return "translate(0," + String(yScale2(i + 1.5)) + ")"
+    return "translate(0," + String(yScale2((.9*i) + 1.5)) + ")"
   }).each(function(d) {
     var singleBar = d3.select(this).selectAll('.singleBar').data(d.val, function(d) {return d.key})
     var enteredBar = singleBar.enter().append("rect").attr("class", '.singleBar')
@@ -406,7 +409,7 @@ function createStackedBars(dataset) {
     function(d) {
       return d.cumm / d.total *  285
     })
-      .attr('height', 9)
+      .attr('height', 8)
       .attr('y', 0)
       .attr('width', function(d) {
         return d.values.length / d.total * 285
@@ -427,7 +430,12 @@ function createStackedBars(dataset) {
         mapUpdate(d.values);
       })
       .on("mouseout", function(d) {
-        d3.selectAll("rect.people").attr("opacity", 1);
+        d3.selectAll("rect.people").attr("opacity", function(d){
+          if (e[0] < d3.select(this).attr('x') && e[1] > d3.select(this).attr('x')) {
+            return 1;
+          }
+          return hide;
+        }); //FIX HERE
         candyTooltip.hide(d);
         mapUpdate(fullDataset);
       });
