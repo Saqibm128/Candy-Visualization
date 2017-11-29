@@ -354,7 +354,7 @@ function createStackedBars(dataset) {
     d3.select(this).append("text").text(function(d) {
       return d.key.substr(3).replace(new RegExp("_", "g"), " ").replace("M M", "M&M");
     })
-    .attr("transform", "translate(-200, 9)")
+    .attr("transform", "translate(-150, 9)")
     .attr("class", "candytext")
     .attr("font-size", '12px')
     .on('mouseover', function(d){
