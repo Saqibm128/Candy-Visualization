@@ -355,6 +355,13 @@ function createStackedBars(dataset) {
       return d.key.substr(3).replace(new RegExp("_", "g"), " ").replace("M M", "M&M");
     })
     .attr("transform", "translate(-150, 9)")
+    .attr('fill', function(d){
+      console.log(clicked);
+      if ((clicked!=null)&&(d.key == d3.select(clicked).data()[0].key)) {
+        return '#ff0000';
+      }
+      return '#000000';
+    })
     .attr("class", "candytext")
     .attr("font-size", '12px')
     .on('mouseover', function(d){
@@ -382,7 +389,6 @@ function createStackedBars(dataset) {
       clicked = this;
       currColors = ["#33cd5f", "#ffc900", "#ef473a", "#387ef5"];
       currColorLabels = ["Joy", "Meh", "Despair", "No Response"];
-      console.log(d)
       createColorLegend(currColors, currColorLabels, d.val.map(function (response) {
        return response.values
       }))
