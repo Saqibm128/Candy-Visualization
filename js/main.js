@@ -73,6 +73,7 @@ var brush = d3.brushX()
         }
       })
       createStackedBars(toUpdate)
+      mapUpdate(toUpdate)
     }
   })
   .on("end", function(d){
@@ -88,9 +89,11 @@ var brush = d3.brushX()
         }
       })
       createStackedBars(toUpdate)
+      mapUpdate(toUpdate)
     } else {
       d3.selectAll(".people").attr("opacity", 1)
       createStackedBars(fullDataset)
+      mapUpdate(fullDataset)
     }
   });
 svg.call(personTooltip)
@@ -214,10 +217,10 @@ function mapSetup(dataset) {
     .projection(d3.geo.albersUsa)
     .column('count')
     .unitId('fips')
-    .scale(650)
+    .scale(900)
     .legend(true);
-    map.height = height
-    map.width = width
+    map.height = 650
+    map.width = 650
     var data_by_states = []
     for (var i = 1; i < 57; i++) {
       var fips = String(i);
@@ -376,7 +379,7 @@ function createStackedBars(dataset) {
         var select = d3.select('#colorSelect').node();
         var option = document.createElement("option");
         option.text = "Candy";
-        select.add(option); 
+        select.add(option);
         document.getElementById('colorSelect').value = 'Candy';
       }
       clicked = this;
