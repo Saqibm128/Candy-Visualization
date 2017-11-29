@@ -273,6 +273,9 @@ function onXScaleChanged() {
 
 function onColorChanged() {
   var select = d3.select('#colorSelect').node();
+  if (select.options[select.length-1].value == 'Candy') {
+    select.remove(select.length-1);
+  }
   var value = select.options[select.selectedIndex].value;
   if (value == "Q4_COUNTRY" || value == "Q3_AGE") {
     fill = d3.scaleOrdinal(d3.schemeCategory20);
@@ -368,6 +371,12 @@ function createStackedBars(dataset) {
       if (clicked!=null) {
         d3.select(clicked)
         .attr("fill", '#000000')
+      } else {
+        var select = d3.select('#colorSelect').node();
+        var option = document.createElement("option");
+        option.text = "Candy";
+        select.add(option); 
+        document.getElementById('colorSelect').value = 'Candy';
       }
       clicked = this;
       currColors = ["#33cd5f", "#ffc900", "#ef473a", "#387ef5"];
