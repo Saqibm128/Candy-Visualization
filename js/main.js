@@ -2,17 +2,17 @@
 var svg = d3.select('svg');
 var height = svg.attr('height');
 var width = 710;//svg.attr('width');
-var people = svg.append('g').attr('class', 'people');
 ///CHART1
 var chart1 = svg.append('g')
-  .attr('transform', 'translate(' + [width / 20, height / 10] + ')');
+  .attr('transform', 'translate(' + [width / 20, height / 10] + ')').attr("class","peopleG");
 var chart2 = svg.append('g')
-  .attr('transform', 'translate(' + [width+200, 20]+')');
+  .attr('transform', 'translate(' + [width+200, 20]+')').attr("class", "candybar");
 var gender = [];
 var goingOut = [];
 var age = [];
 var country = [];
 var state = [];
+var stackG = chart2.append('g').attr("class", "chart2");
 var xScaleLabels = [];
 var yScale;
 var num;
@@ -42,15 +42,60 @@ var candyTooltip = d3.tip()
   .attr("class", "candy tooltip d3-tip")
   .offset([-15, 0])
   .html(function(d) {
-    if (d[1].key ==-1){
+    if (d.key ==-1){
       return "<table><thead><tr><td>Candy Response</td><td>Perentage</td></tr></thead>" +
       "<tbody><tr><td>" + "No Response" + "</td><td>" + Math.round(d[0])+'%' + "</td></tr></tbody></table>";
     }
     return "<table><thead><tr><td>Candy Response</td><td>Perentage</td></tr></thead>" +
-      "<tbody><tr><td>" + d[1].key + "</td><td>" + Math.round(d[0])+'%' + "</td></tr></tbody></table>";
+      "<tbody><tr><td>" + d.key + "</td><td>" + Math.round(d.values.length/d.total * 100)+'%' + "</td></tr></tbody></table>";
+  });
+var brushG;
+var brush = d3.brushX()
+  .extent([[0, 0],[.9 * width, height * (2.27) / 3]])
+  .on("start", function(d){
+    d3.selectAll(".people").classed("hidden", false);
+    if (this != brushG) {
+      // Clear the old brush
+      brush.move(d3.select(brushG), null);
+      brushG = this;
+    }
+  })
+  .on("brush", function(d){
+    d3.selectAll(".people").attr("opacity", hide)
+    var toUpdate = []
+    var e = d3.event.selection;
+    if (e) {
+      d.forEach(function(personData) {
+        var personRect = d3.select("#id" + String(personData.identifier))
+        if (e[0] < personRect.attr('x') && e[1] > personRect.attr('x')) {
+          toUpdate.push(personData)
+          personRect.attr("opacity", 1)
+        }
+      })
+      createStackedBars(toUpdate)
+    }
+  })
+  .on("end", function(d){
+    d3.selectAll(".people").attr("opacity", hide)
+    var toUpdate = []
+    var e = d3.event.selection;
+    if (e) {
+      d.forEach(function(personData) {
+        var personRect = d3.select("#id" + String(personData.identifier))
+        if (e[0] < personRect.attr('x') && e[1] > personRect.attr('x')) {
+          toUpdate.push(personData)
+          personRect.attr("opacity", 1)
+        }
+      })
+      createStackedBars(toUpdate)
+    } else {
+      d3.selectAll(".people").attr("opacity", 1)
+      createStackedBars(fullDataset)
+    }
   });
 svg.call(personTooltip)
 svg.call(candyTooltip)
+chart1.call(brush);
 
 //////FUNCTIONS
 
@@ -122,6 +167,9 @@ function cleanData(string) {
 }
 
 function candyBins(dataset, candy) {
+  if ((dataset) == 'undefined' || dataset.length == 0) {
+    dataset = fullDataset
+  }
   var bin = [];
   var keys = [];
   for (var i = 0; i < dataset.length; i++) {
@@ -233,7 +281,7 @@ function onColorChanged() {
   }
   if (clicked != null) {
     d3.select(clicked)
-          .attr("stroke", 'null')
+          .attr("fill", '#000000')
     clicked = null;
   }
   defineColor(value);
@@ -255,162 +303,118 @@ xScale2 = d3.scaleLinear()
   var xAxis2 = d3.axisBottom(xScale2).ticks(1);
   chart2.append('g')
     .attr('transform', 'translate(0,'+(9 * height / 10)+')')
+    .attr('class', 'x axis candy')
     .call(xAxis2);
-function createStackedBars(garray, index, key) {
-  var stackG = chart2.append('g').attr('class', function(d){
-      return 'id'+String(key);
-    });
-  var total = d3.sum(garray, function(d) { return d.values.length; });
-  var last = 0;
-  for (var i = 0; i < garray.length; i++) {
-    var d = garray[i];
-    var angle = (garray[i].values.length/total)*100;
-    stackG.append("rect")
-    .datum([angle, garray[i]])
-    .attr("class", 'stack')
-    .attr('y', yScale2(index+1.5))
-    .attr('x', xScale2(last))
-    .attr('height', 10)
-    .attr('width', xScale2(angle))
-    .attr("fill", function(d) {
-      if (d[1].key === "MEH") return "#ffc900";
-      else if (d[1].key === "DESPAIR") return "#ef473a";
-      else if (d[1].key === "JOY") return "#33cd5f";
-      else return "#387ef5";
-    })
-    .on("mouseover", function(d) {
-      d3.selectAll(".people").attr("opacity", hide);
-      d3.select(this).attr("opacity", 1)
-      d[1].values.forEach(function(d) {
-        d3.selectAll("#id" + String(d.identifier)).attr("opacity", 1);
-      });
-      candyTooltip.show(d);
-      mapUpdate(d[1].values);
-    })
-    .on("mouseout", function(d) {
-      d3.selectAll("rect.people").attr("opacity", 1);
-      d3.selectAll("rect.stack").attr("opacity", 1);
-      candyTooltip.hide(d);
-      mapUpdate(fullDataset);
-    });
-    last = last +angle;
-  }
-
-      var colorLabel = chart2.selectAll('.barcolorLabel')
-        .data(["#ffc900","#ef473a","#33cd5f","#387ef5"]);
-      var enteredColor = colorLabel.enter().append('rect');
-      colorLabel.merge(enteredColor)
-        .attr('width', 15)
-        .attr('height', 15)
-        .attr('x', 300)
-        .attr('class', 'barcolorLabel')
-        .attr('y', function(d, i) {
-          return 200 + (15 * i);
-        })
-        .attr('fill', function(d, i) {
-          return d;
-        })
-      var colorLabelN = chart2.selectAll('.barcolorLabelN')
-          .data(["Meh","Despair","Joy","No Response"]);
-      var enteredColorn = colorLabelN.enter().append('text');
-      colorLabelN.merge(enteredColorn)
-        .attr('class', 'barcolorLabelN')
-        .attr('x', (300) + 20)
-        .attr('y', function(d, i) {
-          return 213 + (15 * i);
-        })
-        .text(function(d, i) {
-            return d;
-        });
-      var colorSelect = chart2.selectAll('.barselectLabel')
-        .data(["MEH","DESPAIR","JOY","-1"]);
-      var enteredSelect = colorSelect.enter().append('rect');
-      colorSelect.merge(enteredSelect)
-        .attr('width', 100)
-        .attr('height', 15)
-        .attr('x', 300)
-        .attr('class', 'barcolorLabel')
-        .attr('y', function(d, i) {
-          return 200 + (15 * i);
-        })
-
-  var newkey = key.substr(3).replace(new RegExp("_", "g"), " ");
-   stackG.append("text")
-   .attr("transform", "translate("+(-102)+","+(yScale2(index+.75))+")")
-   .attr("text-anchor", "start")
-   .attr('font-size', '9')
-   .text(function(d){ return newkey;})
-   stackG.append("rect")
-   .attr('class', 'candyNrect')
-   .attr("transform", "translate("+(-105)+","+(yScale2(index+1.6))+")")
-   .attr("width", 100)
-   .attr("height", 12)
-   .attr("fill-opacity", 0)
-   .attr('stroke', "null")
-   .on('mouseover', function(d){
-      d3.select(this)
-        .attr("stroke", '#ff0000')
-   })
-   .on('mouseout', function(d){
-      if(this != clicked) {
-        d3.select(this)
-          .attr("stroke", 'null')
-      }
-   })
-   .on('click', function(d){
-    if (clicked != null) {
-      d3.select(clicked)
-            .attr("stroke", 'null')
-    }  
-    clicked = this;
-    currColors = ["#ffc900", "#ef473a", "#33cd5f","#387ef5"];
-    currColorLabels = ["Meh", "Despair","Joy", "No Response"];
-    d3.selectAll("rect.people")
-      .attr('fill', function(d){
-        if (d[key] === "MEH") return "#ffc900";
-        else if (d[key] === "DESPAIR") return "#ef473a";
-        else if (d[key] === "JOY") return "#33cd5f";
-        else return "#387ef5";        
+function createStackedBars(dataset) {
+  d3.selectAll(".candytext").remove(); //FIX THIS
+  var candyVarName = Object.keys(dataset[0]).slice(7, 54) // The location of the candy names
+  //Populate the global candyObject with the data for candies
+  candyVarName.forEach(function(d) {
+    candyObject[d] = candyBins(dataset, d);
+    candyArr.push(candyBins(dataset, d));
+    candyNames.push(d);
+  });
+  candyArr = Object.keys(candyObject)
+    .map(function (name) {
+      var accumulated = 0;
+      toReturn = {'val':candyObject[name], 'key': name};
+      toReturn.val.sort(function(a, b) {
+        var comp = {"DESPAIR": 3, "MEH": 2, "JOY": 1}
+        return comp[a.key] - comp[b.key]
       })
+      var total = 0;
+      toReturn.val.forEach(function(d) {
+        total += d.values.length;
+      })
+      toReturn.total = total;
+      toReturn.val.forEach(function(d) {
+        d.cumm = accumulated;
+        d.total = total;
+        accumulated += d.values.length;
+      })
+      return toReturn;
+    })
+    .sort(function(a, b) {
+      return a.val[0].values.length - b.val[0].values.length;
+    })
 
-      var colorLabel = chart1.selectAll('.colorLabel')
-        .data(currColors.map(function(d, i) {
-          return {'fill': d, 'data': []} //FIX THIS!!!
-        }));
-      var enteredColor = colorLabel.enter().append('rect');
-      colorLabel.merge(enteredColor)
-        .attr('width', 15)
-        .attr('height', 15)
-        .attr('x', 2.2 * width / 3)
-        .attr('class', 'colorLabel')
-        .attr('y', function(d, i) {
-          return 100 + (15 * i);
-        })
-        .attr('fill', function(d, i) {
-          return d.fill;
-        }).on('mouseover', function(d) {
-          d3.selectAll(".people").attr("opacity", ".2")
-          d.data.forEach(function(person) {
-            d3.selectAll("#id" + String(person.identifier)).attr("opacity", "1")
-          })
-        }).on('mouseout', function(d) {
-          d3.selectAll(".people").attr("opacity", "1")
+  var bars = stackG.selectAll(".stackedBarsG").data(candyArr,
+    function(d) {
+      return d.key
+    });
+  var enteredBars = bars.enter().append("g").attr('class', 'stackedBarsG');
+  enteredBars.merge(bars).transition().attr("transform", function(d, i) {
+    return "translate(0," + String(yScale2(i + 1.5)) + ")"
+  }).each(function(d) {
+    var singleBar = d3.select(this).selectAll('.singleBar').data(d.val, function(d) {return d.key})
+    var enteredBar = singleBar.enter().append("rect").attr("class", '.singleBar')
+    d3.select(this).append("text").text(function(d) {
+      return d.key.substr(3).replace(new RegExp("_", "g"), " ").replace("M M", "M&M");
+    })
+    .attr("transform", "translate(-200, 9)")
+    .attr("class", "candytext")
+    .on('mouseover', function(d){
+      document.body.style.cursor = 'default'
+      d3.select(this)
+        .attr("fill", '#ff0000')
+    })
+    .on('mouseout', function(d){
+      if (clicked!=this) {
+        d3.select(this)
+          .attr("fill", '#000000')
+        }
+    })
+    .on('click', function(d){
+      if (clicked!=null) {
+        d3.select(clicked)
+        .attr("fill", '#000000')
+      }
+      clicked = this;
+      currColors = ["#33cd5f", "#ffc900", "#ef473a", "#387ef5"];
+      currColorLabels = ["Joy", "Meh", "Despair", "No Response"];
+      console.log(d)
+      createColorLegend(currColors, currColorLabels, d.val.map(function (response) {
+       return response.values
+      }))
+      var key = d.key
+      d3.selectAll("rect.people")
+        .attr('fill', function(d){
+          if (d[key] === "MEH") return "#ffc900";
+          else if (d[key] === "DESPAIR") return "#ef473a";
+          else if (d[key] === "JOY") return "#33cd5f";
+          else return "#387ef5";
+       })
+    })
+
+    singleBar.merge(enteredBar).attr('x',
+    function(d) {
+      return d.cumm / d.total *  285
+    })
+      .attr('height', 9)
+      .attr('width', function(d) {
+        return d.values.length / d.total * 285
+      })
+      .attr("fill", function(d) {
+        if (d.key === "MEH") return "#ffc900";
+        else if (d.key === "DESPAIR") return "#ef473a";
+        else if (d.key === "JOY") return "#33cd5f";
+        else return "#387ef5";
+      })
+      .on("mouseover", function(d) {
+        d3.selectAll(".people").attr("opacity", hide);
+        d3.select(this).attr("opacity", 1)
+        d.values.forEach(function(d) {
+          d3.selectAll("#id" + String(d.identifier)).attr("opacity", 1);
         });
-      colorLabel.exit().remove();
-      var colorLabelN = chart1.selectAll('.colorLabelN')
-          .data(currColorLabels);
-        var enteredColorn = colorLabelN.enter().append('text');
-        colorLabelN.merge(enteredColorn)
-          .attr('class', 'colorLabelN')
-          .attr('x', (2.2 * width / 3) + 20)
-          .attr('y', function(d, i) {
-            return 113 + (15 * i);
-          })
-          .text(function(d, i) {
-            return d;
-          });
-        colorLabelN.exit().remove();
-   })
+        candyTooltip.show(d);
+        mapUpdate(d.values);
+      })
+      .on("mouseout", function(d) {
+        d3.selectAll("rect.people").attr("opacity", 1);
+        candyTooltip.hide(d);
+        mapUpdate(fullDataset);
+      });
+  })
 }
 
 function updateXLabel(array) {
@@ -572,6 +576,10 @@ function defineColor(key) {
       }
       return fill(temp);
     })
+    createColorLegend(currColors, currColorLabels, colorVarBin)
+}
+
+function createColorLegend(currColors, currColorLabels, colorVarBin) {
   var colorLabel = chart1.selectAll('.colorLabel')
     .data(currColors.map(function(d, i) {
       return {'fill': d, 'data': colorVarBin[i]}
@@ -596,12 +604,11 @@ function defineColor(key) {
       d3.selectAll(".people").attr("opacity", "1")
     });
   colorLabel.exit().remove();
-
-  var colorLabelN = chart1.selectAll('.colorLabelN')
-    .data(currColorLabels);
+  var colorLabelN = chart1.selectAll('.colorLabelN').data(currColorLabels)
   var enteredColorn = colorLabelN.enter().append('text');
   colorLabelN.merge(enteredColorn)
     .attr('class', 'colorLabelN')
+    .attr('fill', '#000000')
     .attr('x', (2.2 * width / 3) + 20)
     .attr('y', function(d, i) {
       return 113 + (15 * i);
@@ -640,25 +647,16 @@ function setup(error, dataset) {
     console.error(error);
     return;
   }
-  chart1.selectAll('title').data(["Candy Survey Participants", "Categorized By Demographics"]).enter().append('text').attr('x', width * .7).attr('y', function(d,i){return -20 + (i*20);}).attr('text-anchor', "middle").text(function(d) {
+  chart1.datum(dataset)
+  chart1.selectAll('title').data(["Candy Survey Participants", "Categorized By Demographics"]).enter().append('text').attr('x', width * .7).attr('y', function(d,i){return -20 + (i*20);}).attr('text-anchor', "middle").attr("fill","#000000").text(function(d) {
     return d;
   });
   totalLengthOfData = dataset.length;
   //CandyFrequencies and the pull down button setup
-  var candyVarName = Object.keys(dataset[0]).slice(7, 54) // The location of the candy names
-  //Populate the global candyObject with the data for candies
   candyObject = {}
   candyArr = [];
   candyNames = [];
-  candyVarName.forEach(function(d) {
-    candyObject[d] = candyBins(dataset, d);
-    candyArr.push(candyBins(dataset, d));
-    candyNames.push(d);
-  });
-  for (var i = 0; i < candyVarName.length; i++) {
-    var stack = candyObject[candyVarName[i]].sort(function(a,b){ return sortDespair(a,b);})
-    createStackedBars(stack, i, candyVarName[i]);
-  }
+  createStackedBars(dataset);
   //DEMOGRAPHICS;
   gender = candyBins(dataset, 'Q2_GENDER');
   goingOut = candyBins(dataset, 'Q1_GOING_OUT');
@@ -674,7 +672,7 @@ function setup(error, dataset) {
   chart1.append('g')
     .attr('class', 'x')
     .append('g')
-    .attr('class', 'x axis');
+    .attr('class', 'x axis persons');
 
   document.getElementById('xScaleSelect').value = 'age';
   document.getElementById('colorSelect').value = 'NONE';
@@ -706,6 +704,7 @@ function updateChart() {
     .attr('class', 'xLabels')
     .attr('y', ((3 * height / 4) + 24))
     .attr('font-size', '9')
+    .attr('fill','black')
     .attr('text-anchor', 'middle')
     .text(function(d) {
       return d;
@@ -721,6 +720,7 @@ function updateChart() {
     .attr('class', 'counters')
     .attr('y', ((3 * height / 4) + 50))
     .attr('font-size', '9')
+    .attr('fill', '#000000')
     .attr('text-anchor', 'middle')
     .text(function(d) {
       if (d.values.length != 1) {

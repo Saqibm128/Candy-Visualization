@@ -13,10 +13,10 @@ svg {
 body {
     font-family: "Open Sans";
 }
-.x.axis path {
+.x.axis.persons path {
 	opacity: 0;
 }
-.x.axis text {
+.x.axis.persons text {
 	opacity: 0;
 }
 
