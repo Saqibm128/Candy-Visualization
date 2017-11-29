@@ -668,9 +668,9 @@ function setup(error, dataset) {
     return;
   }
   chart1.datum(dataset)
-  chart1.selectAll('title').data(["Candy Survey Participants", "Categorized By Demographics"]).enter().append('text').attr('x', width * .7).attr('y', function(d,i){return -20 + (i*20);}).attr('text-anchor', "middle").attr("fill","#000000").text(function(d) {
+  chart1.selectAll('.title').data(["Candy Survey Participants", "Categorized By Demographics"]).enter().append('text').attr('x', width * .7).attr('y', function(d,i){return -20 + (i*20);}).attr('text-anchor', "middle").attr("fill","#000000").text(function(d) {
     return d;
-  });
+  }).attr("class", "title");
   totalLengthOfData = dataset.length;
   //CandyFrequencies and the pull down button setup
   candyObject = {}
