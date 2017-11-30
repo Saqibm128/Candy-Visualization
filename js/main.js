@@ -31,6 +31,11 @@ var fullDataset;
 var hide = .3;
 var map;
 
+var red = '#c91010';
+var yellow = '#f2d042';
+var green = '#319a2d';
+var blue = '#1d61ae';
+
 var e = null;
 
 var personTooltip = d3.tip()
@@ -392,7 +397,7 @@ function createStackedBars(dataset) {
           document.getElementById('colorSelect').value = 'Candy';
         }
         clicked = this;
-        currColors = ["#33cd5f", "#ffc900", "#ef473a", "#387ef5"];
+        currColors = [green, yellow, red, blue];
         currColorLabels = ["Joy", "Meh", "Despair", "No Response"];
         createColorLegend(currColors, currColorLabels, d.val.map(function(response) {
           return response.values
@@ -400,10 +405,10 @@ function createStackedBars(dataset) {
         var key = d.key
         d3.selectAll("rect.people").transition()
           .attr('fill', function(d) {
-            if (d[key] === "MEH") return "#ffc900";
-            else if (d[key] === "DESPAIR") return "#ef473a";
-            else if (d[key] === "JOY") return "#33cd5f";
-            else return "#387ef5";
+            if (d[key] === "MEH") return yellow;
+            else if (d[key] === "DESPAIR") return red;
+            else if (d[key] === "JOY") return green;
+            else return blue;
           })
       })
 
@@ -417,10 +422,10 @@ function createStackedBars(dataset) {
         return d.values.length / d.total * 285
       })
       .attr("fill", function(d) {
-        if (d.key === "MEH") return "#ffc900";
-        else if (d.key === "DESPAIR") return "#ef473a";
-        else if (d.key === "JOY") return "#33cd5f";
-        else return "#387ef5";
+        if (d.key === "MEH") return yellow;
+        else if (d.key === "DESPAIR") return red;
+        else if (d.key === "JOY") return green;
+        else return blue;
       })
       .on("mouseover", function(d) {
         d3.selectAll(".people").attr("opacity", hide);
@@ -562,7 +567,7 @@ function defineColor(key) {
 
 function chart2Legend() {
   var data = ["Joy", "Meh", "Despair", "No Response"]
-  var dataColor = ["#33cd5f","#ffc900","#ef473a","#387ef5"]
+  var dataColor = [green,yellow,red,blue]
   chart2.selectAll("legend").data(dataColor).enter().append('rect')
     .attr('x',function(d,i){
       return (80*i) - 20;
@@ -655,7 +660,7 @@ function setup(error, dataset) {
     return;
   }
   chart1.datum(dataset)
-  chart1.selectAll('.title').data(["Candy Survey Participants", "Categorized By Demographics"]).enter().append('text').attr('x', width * .7).attr('y', function(d, i) {
+  chart1.selectAll('.title').data(["Candy Survey Participants", "Categorized By Demographics","and Candy Responses"]).enter().append('text').attr('x', width * .8).attr('y', function(d, i) {
     return -20 + (i * 20);
   }).attr('text-anchor', "middle").attr("fill", "#000000").text(function(d) {
     return d;
