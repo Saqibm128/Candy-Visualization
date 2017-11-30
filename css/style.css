@@ -1,3 +1,15 @@
+text {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px;
+}
+text.title {
+  font-family: 'Emilys Candy';
+  font-size: 20px;
+}
+#map text {
+  font-family: "Muli", sans-serif;
+  font-size: 10px;
+}
 #main {
     padding: 10px;
 }
@@ -8,12 +20,12 @@ svg {
 }
 
 body {
-    font-family: "Open Sans";
+    font-family: 'Muli', sans-serif;
 }
-.x.axis path {
+.x.axis.persons path {
 	opacity: 0;
 }
-.x.axis text {
+.x.axis.persons text {
 	opacity: 0;
 }
 
