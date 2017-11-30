@@ -367,7 +367,10 @@ function createStackedBars(dataset) {
         return comp[a.key] - comp[b.key]
       })
       if (toReturn.val[0].key != "JOY") {
-        toReturn.val = [{"key": "JOY", "values": []}].concat(toReturn.val)
+        toReturn.val = [{
+          "key": "JOY",
+          "values": []
+        }].concat(toReturn.val)
       }
       toReturn.val.sort(function(a, b) {
         var comp = {
@@ -535,8 +538,13 @@ function defineSorter(a, b, type) {
     return a.identifier > b.identifier;
   }
   if (type == 'Q2_GENDER') {
-    var gender = {'Male': 1, "Female": 2, "Other": 3, "I'd rather not say": 4}
-    return - gender[a[type]] + gender[b[type]]
+    var gender = {
+      'Male': 1,
+      "Female": 2,
+      "Other": 3,
+      "I'd rather not say": 4
+    }
+    return -gender[a[type]] + gender[b[type]]
   }
   if (type == 'Q1_GOING_OUT') {
     if (a[type] == b[type]) {
