@@ -227,13 +227,7 @@ function mapSetup(dataset) {
 
   setTimeout(function() {
     d3.select("#map svg").call(stateTooltip)
-    d3.selectAll('.unit').on("dblclick", function(d) {
-      var state = d.properties.name;
-      var toUse = fullDataset.filter(function(person) {
-        return person.State == state
-      });
-      createStackedBars(toUse)
-    }).on("mouseover", function(d) {
+    d3.selectAll('.unit').on("mouseover", function(d) {
       var state = d.properties.name;
       var toUse = fullDataset.filter(function(person) {
         return person.State == state
@@ -243,9 +237,11 @@ function mapSetup(dataset) {
         d3.selectAll("#id" + String(d.identifier)).attr("opacity", 1)
       })
       stateTooltip.show({'state':state, 'num':toUse.length})
+      createStackedBars(toUse)
     }).on("mouseout", function(d) {
       d3.selectAll(".people").attr("opacity", 1)
       stateTooltip.hide()
+      createStackedBars(fullDataset)
     })
   }, 1000)
 
