@@ -549,11 +549,51 @@ function defineSorter(a, b, type) {
     return parseInt(a[type]) - parseInt(b[type]);
   }
   if (type == 'Q4_COUNTRY') {
-    if (a[type] == -1) return -1
-    if (b[type] == -1) return -1
-    return String(a[type]).localeCompare(String(b[type]))
+    if(a[type] == b[type]) {
+      return 0;
+    } else if (a[type] == 'Canada') {
+      return 1;
+    } else if (b[type] == 'Canada') {
+      return -1;
+    } else if (a[type] == 'Denmark') {
+      return 1;
+    } else if (b[type] == 'Denmark') {
+      return -1;
+    } else if (a[type] == 'Germany') {
+      return 1;
+    } else if (b[type] == 'Germany') {
+      return -1;
+    } else if (a[type] == 'Ireland') {
+      return 1;
+    } else if (b[type] == 'Ireland') {
+      return -1;
+    } else if (a[type] == 'Japan') {
+      return 1;
+    } else if (b[type] == 'Japan') {
+      return -1;
+    } else if (a[type] == 'Mexico') {
+      return 1;
+    } else if (b[type] == 'Mexico') {
+      return -1;
+    } else if (a[type] == 'Netherlands') {
+      return 1;
+    } else if (b[type] == 'Netherlands') {
+      return -1;
+    } else if (a[type] == 'Scotland') {
+      return 1;
+    } else if (b[type] == 'Scotland') {
+      return -1;
+    } else if (a[type] == 'United Kingdom') {
+      return 1;
+    } else if (b[type] == 'United Kingdom') {
+      return -1;
+    } else if (a[type] == 'United States') {
+      return 1;
+    } else {
+      return -1;
+    }
   }
-  return a[type] > b[type];
+  return a[type]>b[type];
 }
 
 function defineColor(key) {
