@@ -38,6 +38,14 @@ var blue = '#1d61ae';
 
 var e = null;
 
+var stateTooltip = d3.tip()
+  .attr("class", "state tooltip d3-tip")
+  .offset([-20, 0])
+  .html(function(d) {
+    return  "<table><thead><tr><td>State</td><td>Number of Participants</td></tr></thead>" +
+      "<tbody><tr><td>" + d.state + "</td><td>" + d.num + "</td></tr></tbody></table>";
+  })
+
 var personTooltip = d3.tip()
   .attr("class", "person tooltip d3-tip")
   .offset([-20, 0])
@@ -214,9 +222,33 @@ function mapSetup(dataset) {
       "count": String(bin.values.length)
     }
   })
-  d3.select('#map')
-    .datum(data_by_states)
-    .call(map.draw, map);
+  map.draw(d3.select('#map')
+    .datum(data_by_states), map);
+
+  setTimeout(function() {
+    d3.select("#map svg").call(stateTooltip)
+    d3.selectAll('.unit').on("dblclick", function(d) {
+      var state = d.properties.name;
+      var toUse = fullDataset.filter(function(person) {
+        return person.State == state
+      });
+      createStackedBars(toUse)
+    }).on("mouseover", function(d) {
+      var state = d.properties.name;
+      var toUse = fullDataset.filter(function(person) {
+        return person.State == state
+      });
+      d3.selectAll(".people").attr("opacity", hide)
+      toUse.forEach(function(d) {
+        d3.selectAll("#id" + String(d.identifier)).attr("opacity", 1)
+      })
+      stateTooltip.show({'state':state, 'num':toUse.length})
+    }).on("mouseout", function(d) {
+      d3.selectAll(".people").attr("opacity", 1)
+      stateTooltip.hide()
+    })
+  }, 1000)
+
 }
 
 function ageBins(dataset) {
@@ -334,7 +366,6 @@ function createStackedBars(dataset) {
         }
         return comp[a.key] - comp[b.key]
       })
-      console.log(toReturn)
       if (toReturn.val[0].key != "JOY") {
         toReturn.val = [{
           "key": "JOY",
@@ -364,7 +395,6 @@ function createStackedBars(dataset) {
       })
       return aLength - bLength;
     })
-  console.log(candyArr)
 
   var bars = stackG.selectAll(".stackedBarsG").data(candyArr,
     function(d) {
@@ -446,7 +476,6 @@ function createStackedBars(dataset) {
         else return blue;
       })
       .on("mouseover", function(d) {
-        console.log(d)
         d3.selectAll(".people").attr("opacity", hide);
         d3.select(this).attr("opacity", 1)
         d.values.forEach(function(d) {
