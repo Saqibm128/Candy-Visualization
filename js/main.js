@@ -710,10 +710,16 @@ function createColorLegend(currColors, currColorLabels, colorVarBin) {
       return d.fill;
     }).on('mouseover', function(d) {
       d3.selectAll(".people").attr("opacity", ".2")
+      if (d.data.length != 0) {
+        mapUpdate(d.data)
+        createStackedBars(d.data)
+      }
       d.data.forEach(function(person) {
         d3.selectAll("#id" + String(person.identifier)).attr("opacity", "1")
       })
     }).on('mouseout', function(d) {
+      mapUpdate(fullDataset)
+      createStackedBars(fullDataset)
       d3.selectAll(".people").attr("opacity", "1")
     });
   colorLabel.exit().remove();
