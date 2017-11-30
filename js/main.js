@@ -42,8 +42,20 @@ var personTooltip = d3.tip()
   .attr("class", "person tooltip d3-tip")
   .offset([-20, 0])
   .html(function(d) {
+    var g = d.Q2_GENDER;
+    var a = d.Q3_AGE;
+    var c = d.Q4_COUNTRY;
+    if (g == -1) {
+      g = "Unknown";
+    }
+    if (a == -1) {
+      a = "Unknown";
+    }
+    if (c == -1) {
+      c = "Unknown";
+    }
     return "<table><thead><tr><td>Gender</td><td>Age</td><td>Country</td></tr></thead>" +
-      "<tbody><tr><td>" + d.Q2_GENDER + "</td><td>" + d.Q3_AGE + "</td><td>" + d.Q4_COUNTRY + "</td></tr></tbody></table>";
+      "<tbody><tr><td>" + g + "</td><td>" + a + "</td><td>" + c + "</td></tr></tbody></table>";
   });
 var candyTooltip = d3.tip()
   .attr("class", "candy tooltip d3-tip")
@@ -278,7 +290,7 @@ yScale2 = d3.scaleLinear()
 xScale2 = d3.scaleLinear()
   .domain([0, 100])
   .range([0, 4 * width / 10])
-var xAxis2 = d3.axisBottom(xScale2).ticks(1);
+var xAxis2 = d3.axisBottom(xScale2).ticks(5);
 chart2.append('g')
   .attr('transform', 'translate(0,' + (9 * height / 10) + ')')
   .attr('class', 'x axis candy')
@@ -503,13 +515,29 @@ function defineSorter(a, b, type) {
     return a.identifier > b.identifier;
   }
   if (type == 'Q2_GENDER') {
-    var gender = {
-      'Male': 1,
-      "Female": 2,
-      "Other": 3,
-      "I'd rather not say": 4
+    if (a[type] == b[type]) {
+      return 0;
+    } else if (a[type] == 'Male') {
+      return 1;
+    } else if (b[type] == 'Male') {
+      return -1;
+    } else if (a[type] == 'Female') {
+      return 1;
+    } else if (b[type] == 'Female') {
+      return -1;
+    } else if (a[type] == "I'd rather not say") {
+      return 1;
+    } else if (b[type] == "I'd rather not say") {
+      return -1;
+    } else if (a[type] == "Other") {
+      return 1;
+    } else if (b[type] == "Other") {
+      return -1;
+    } else if (a[type] == "Unknown") {
+      return 1;
+    } else {
+      return -1;
     }
-    return -gender[a[type]] + gender[b[type]]
   }
   if (type == 'Q1_GOING_OUT') {
     if (a[type] == b[type]) {
@@ -528,11 +556,51 @@ function defineSorter(a, b, type) {
     return parseInt(a[type]) - parseInt(b[type]);
   }
   if (type == 'Q4_COUNTRY') {
-    if (a[type] == -1) return -1
-    if (b[type] == -1) return -1
-    return String(a[type]).localeCompare(String(b[type]))
+    if(a[type] == b[type]) {
+      return 0;
+    } else if (a[type] == 'Canada') {
+      return 1;
+    } else if (b[type] == 'Canada') {
+      return -1;
+    } else if (a[type] == 'Denmark') {
+      return 1;
+    } else if (b[type] == 'Denmark') {
+      return -1;
+    } else if (a[type] == 'Germany') {
+      return 1;
+    } else if (b[type] == 'Germany') {
+      return -1;
+    } else if (a[type] == 'Ireland') {
+      return 1;
+    } else if (b[type] == 'Ireland') {
+      return -1;
+    } else if (a[type] == 'Japan') {
+      return 1;
+    } else if (b[type] == 'Japan') {
+      return -1;
+    } else if (a[type] == 'Mexico') {
+      return 1;
+    } else if (b[type] == 'Mexico') {
+      return -1;
+    } else if (a[type] == 'Netherlands') {
+      return 1;
+    } else if (b[type] == 'Netherlands') {
+      return -1;
+    } else if (a[type] == 'Scotland') {
+      return 1;
+    } else if (b[type] == 'Scotland') {
+      return -1;
+    } else if (a[type] == 'United Kingdom') {
+      return 1;
+    } else if (b[type] == 'United Kingdom') {
+      return -1;
+    } else if (a[type] == 'United States') {
+      return 1;
+    } else {
+      return -1;
+    }
   }
-  return a[type] > b[type];
+  return a[type]>b[type];
 }
 
 function defineColor(key) {
@@ -573,6 +641,7 @@ function defineColor(key) {
 }
 
 function chart2Legend() {
+  chart2.append("text").attr("x", (1000-width)/2).attr("y", height-30).attr("text-anchor","middle").text("Percent of Participants (%)");
   var data = ["Joy", "Meh", "Despair", "No Response"]
   var dataColor = [green,yellow,red,blue]
   chart2.selectAll("legend").data(dataColor).enter().append('rect')
