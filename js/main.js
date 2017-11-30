@@ -102,65 +102,6 @@ chart1.call(brush);
 
 //////FUNCTIONS
 
-  //sorters
-function sortDespair(a,b) {
-  if (a.key == b.key) {
-    return 0;
-  } else if (a.key == "JOY") {
-    return 1;
-  } else if (b.key == "JOY") {
-    return -1;
-  } else if (a.key == "MEH") {
-    return 1;
-  } else {
-    return -1;
-  }
-  return a.key>b.key;
-}
-function sortJoy(a,b) {
-  if (a.key == b.key) {
-    return 0;
-  } else if (a.key == "JOY") {
-    return 1;
-  } else if (b.key == "JOY") {
-    return -1;
-  } else if (a.key == "MEH") {
-    return 1;
-  } else {
-    return -1;
-  }
-  return a.key>b.key;
-}
-function sortMeh(a,b) {
-  if (a.key == b.key) {
-    return 0;
-  } else if (a.key == "JOY") {
-    return 1;
-  } else if (b.key == "JOY") {
-    return -1;
-  } else if (a.key == "MEH") {
-    return 1;
-  } else {
-    return -1;
-  }
-  return a.key>b.key;
-}
-function sortNoResponse(a,b) {
-  if (a.key == b.key) {
-    return 0;
-  } else if (a.key == "JOY") {
-    return 1;
-  } else if (b.key == "JOY") {
-    return -1;
-  } else if (a.key == "MEH") {
-    return 1;
-  } else {
-    return -1;
-  }
-  return a.key>b.key;
-}
-
-
 function cleanData(string) {
   if (string == "") {
     return -1;
@@ -433,7 +374,6 @@ function createStackedBars(dataset) {
         mapUpdate(d.values);
       })
       .on("mouseout", function(d) {
-        console.log(e);
         d3.selectAll("rect.people").attr("opacity", function(d){
           if (e!=null) {
             if(e[0] < d3.select(this).attr('x') && e[1] > d3.select(this).attr('x')) {
@@ -611,6 +551,29 @@ function defineColor(key) {
     createColorLegend(currColors, currColorLabels, colorVarBin)
 }
 
+function chart2Legend() {
+  var data = ["Joy", "Meh", "Despair", "No Response"]
+  var dataColor = ["#33cd5f","#ffc900","#ef473a","#387ef5"]
+  chart2.selectAll("legend").data(dataColor).enter().append('rect')
+    .attr('x',function(d,i){
+      return (80*i) - 20;
+    })
+    .attr('y',0)
+    .attr('width', 80)
+    .attr('height', 20)
+    .attr('fill',function(d,i){
+      return d;
+    })
+  chart2.selectAll("legend").data(data).enter().append('text')
+    .attr('transform',function(d,i){
+      return 'translate('+[(i*80)+20,15]+')';
+    })
+    .attr("text-anchor", "middle")
+    .text(function(d,i){
+      return d;
+    })
+}
+
 function createColorLegend(currColors, currColorLabels, colorVarBin) {
   var colorLabel = chart1.selectAll('.colorLabel')
     .data(currColors.map(function(d, i) {
@@ -688,6 +651,7 @@ function setup(error, dataset) {
   candyObject = {}
   candyArr = [];
   candyNames = [];
+  chart2Legend();
   createStackedBars(dataset);
   //DEMOGRAPHICS;
   gender = candyBins(dataset, 'Q2_GENDER');
