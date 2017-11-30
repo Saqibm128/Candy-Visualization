@@ -42,8 +42,20 @@ var personTooltip = d3.tip()
   .attr("class", "person tooltip d3-tip")
   .offset([-20, 0])
   .html(function(d) {
+    var g = d.Q2_GENDER;
+    var a = d.Q3_AGE;
+    var c = d.Q4_COUNTRY;
+    if (g == -1) {
+      g = "Unknown";
+    }
+    if (a == -1) {
+      a = "Unknown";
+    }
+    if (c == -1) {
+      c = "Unknown";
+    }
     return "<table><thead><tr><td>Gender</td><td>Age</td><td>Country</td></tr></thead>" +
-      "<tbody><tr><td>" + d.Q2_GENDER + "</td><td>" + d.Q3_AGE + "</td><td>" + d.Q4_COUNTRY + "</td></tr></tbody></table>";
+      "<tbody><tr><td>" + g + "</td><td>" + a + "</td><td>" + c + "</td></tr></tbody></table>";
   });
 var candyTooltip = d3.tip()
   .attr("class", "candy tooltip d3-tip")
@@ -496,13 +508,29 @@ function defineSorter(a, b, type) {
     return a.identifier > b.identifier;
   }
   if (type == 'Q2_GENDER') {
-    var gender = {
-      'Male': 1,
-      "Female": 2,
-      "Other": 3,
-      "I'd rather not say": 4
+    if (a[type] == b[type]) {
+      return 0;
+    } else if (a[type] == 'Male') {
+      return 1;
+    } else if (b[type] == 'Male') {
+      return -1;
+    } else if (a[type] == 'Female') {
+      return 1;
+    } else if (b[type] == 'Female') {
+      return -1;
+    } else if (a[type] == "I'd rather not say") {
+      return 1;
+    } else if (b[type] == "I'd rather not say") {
+      return -1;
+    } else if (a[type] == "Other") {
+      return 1;
+    } else if (b[type] == "Other") {
+      return -1;
+    } else if (a[type] == "Unknown") {
+      return 1;
+    } else {
+      return -1;
     }
-    return -gender[a[type]] + gender[b[type]]
   }
   if (type == 'Q1_GOING_OUT') {
     if (a[type] == b[type]) {
