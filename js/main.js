@@ -205,7 +205,7 @@ function mapSetup(dataset) {
     .unitId('fips')
     .scale(900)
     .legend(true);
-  map.height = 650
+  map.height = 300
   map.width = 650
   var data_by_states = []
   for (var i = 1; i < 57; i++) {

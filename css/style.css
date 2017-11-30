@@ -10,6 +10,8 @@ text.title {
   font-family: "Muli", sans-serif;
   font-size: 10px;
 }
+
+
 #main {
     padding: 10px;
 }
@@ -19,6 +21,10 @@ svg {
   margin: auto;
 }
 
+#map svg {
+  height: 500;
+  width: 500;
+}
 body {
     font-family: 'Muli', sans-serif;
 }
