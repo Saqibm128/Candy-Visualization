@@ -308,28 +308,27 @@ function createStackedBars(dataset) {
         'val': candyObject[name],
         'key': name
       };
+      for (i = 0; i < toReturn.val.length; i++) {
+        if (toReturn.val[i].key == -1) {
+          toReturn.val[i].key = "No Response"
+        }
+      }
       toReturn.val.sort(function(a, b) {
         var comp = {
+          "No Response": 4,
           "DESPAIR": 3,
           "MEH": 2,
           "JOY": 1
         }
         return comp[a.key] - comp[b.key]
       })
+      console.log(toReturn)
       if (toReturn.val[0].key != "JOY") {
         toReturn.val = [{
           "key": "JOY",
           "values": []
         }].concat(toReturn.val)
       }
-      toReturn.val.sort(function(a, b) {
-        var comp = {
-          "DESPAIR": 3,
-          "MEH": 2,
-          "JOY": 1
-        }
-        return comp[a.key] - comp[b.key]
-      })
       var total = 0;
       toReturn.val.forEach(function(d) {
         total += d.values.length;
@@ -359,6 +358,7 @@ function createStackedBars(dataset) {
     function(d) {
       return d.key
     });
+  bars.exit().remove()
   var enteredBars = bars.enter().append("g").attr('class', 'stackedBarsG');
   enteredBars.merge(bars).transition().attr("transform", function(d, i) {
     return "translate(0," + String(yScale2((.9*i) + 1.5)) + ")"
@@ -417,7 +417,7 @@ function createStackedBars(dataset) {
             else return blue;
           })
       })
-
+    singleBar.exit().remove()
     singleBar.merge(enteredBar).attr('x',
     function(d) {
       return d.cumm / d.total *  285
@@ -434,6 +434,7 @@ function createStackedBars(dataset) {
         else return blue;
       })
       .on("mouseover", function(d) {
+        console.log(d)
         d3.selectAll(".people").attr("opacity", hide);
         d3.select(this).attr("opacity", 1)
         d.values.forEach(function(d) {
