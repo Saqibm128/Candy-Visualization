@@ -50,7 +50,7 @@ var candyTooltip = d3.tip()
       "<tbody><tr><td>" + d.key + "</td><td>" + Math.round(d.values.length / d.total * 100) + '%' + "</td></tr></tbody></table>";
   });
 var brushG;
-var brush = d3.brushX()
+var brush = d3.brush()
   .extent([
     [0, 0],
     [.9 * width, height * (2.27) / 3]
@@ -70,13 +70,15 @@ var brush = d3.brushX()
     if (e) {
       d.forEach(function(personData) {
         var personRect = d3.select("#id" + String(personData.identifier))
-        if (e[0] < personRect.attr('x') && e[1] > personRect.attr('x')) {
+        if ((e[0][0] < personRect.attr('x') && e[1][0] > personRect.attr('x')) && (e[0][1] < personRect.attr('y') && e[1][1] > personRect.attr('y'))) {
           toUpdate.push(personData)
           personRect.attr("opacity", 1)
         }
       })
-      createStackedBars(toUpdate)
-      mapUpdate(toUpdate)
+      if (toUpdate.length != 0) {
+        createStackedBars(toUpdate)
+        mapUpdate(toUpdate)
+      }
     }
   })
   .on("end", function(d) {
@@ -86,13 +88,15 @@ var brush = d3.brushX()
     if (e) {
       d.forEach(function(personData) {
         var personRect = d3.select("#id" + String(personData.identifier))
-        if (e[0] < personRect.attr('x') && e[1] > personRect.attr('x')) {
+        if ((e[0][0] < personRect.attr('x') && e[1][0] > personRect.attr('x')) && (e[0][1] < personRect.attr('y') && e[1][1] > personRect.attr('y'))) {
           toUpdate.push(personData)
           personRect.attr("opacity", 1)
         }
       })
-      createStackedBars(toUpdate)
-      mapUpdate(toUpdate)
+      if ((toUpdate.length) != 0) {
+        createStackedBars(toUpdate)
+        mapUpdate(toUpdate)
+      }
     } else {
       d3.selectAll(".people").attr("opacity", 1)
       createStackedBars(fullDataset)
@@ -118,7 +122,7 @@ function sortDespair(a, b) {
   } else {
     return -1;
   }
-  return a.key > b.key;
+  return a.key.localeCompare(b.key);
 }
 
 function sortJoy(a, b) {
@@ -133,7 +137,7 @@ function sortJoy(a, b) {
   } else {
     return -1;
   }
-  return a.key > b.key;
+  return a.key.localeCompare(b.key);
 }
 
 function sortMeh(a, b) {
@@ -148,7 +152,7 @@ function sortMeh(a, b) {
   } else {
     return -1;
   }
-  return a.key > b.key;
+  return a.key.localeCompare(b.key);
 }
 
 function sortNoResponse(a, b) {
@@ -163,7 +167,7 @@ function sortNoResponse(a, b) {
   } else {
     return -1;
   }
-  return a.key > b.key;
+  return a.key.localeCompare(b.key);
 }
 
 
@@ -201,6 +205,10 @@ function candyBins(dataset, candy) {
 }
 
 function mapUpdate(dataset) {
+  if (!dataset || dataset == 'null' || dataset == "undefined") {
+    mapUpdate(fullDataset)
+    return
+  }
   var data_by_states = []
   for (var i = 1; i < 57; i++) {
     var fips = String(i);
@@ -331,6 +339,9 @@ chart2.append('g')
   .call(xAxis2);
 
 function createStackedBars(dataset) {
+  if (!dataset || dataset == 'null' || dataset == "undefined") {
+    return
+  }
   d3.selectAll(".candytext").remove(); //FIX THIS
   var candyVarName = Object.keys(dataset[0]).slice(7, 54) // The location of the candy names
   //Populate the global candyObject with the data for candies
@@ -339,6 +350,7 @@ function createStackedBars(dataset) {
     candyArr.push(candyBins(dataset, d));
     candyNames.push(d);
   });
+
   candyArr = Object.keys(candyObject)
     .map(function(name) {
       var accumulated = 0;
@@ -346,6 +358,17 @@ function createStackedBars(dataset) {
         'val': candyObject[name],
         'key': name
       };
+      toReturn.val.sort(function(a, b) {
+        var comp = {
+          "DESPAIR": 3,
+          "MEH": 2,
+          "JOY": 1
+        }
+        return comp[a.key] - comp[b.key]
+      })
+      if (toReturn.val[0].key != "JOY") {
+        toReturn.val = [{"key": "JOY", "values": []}].concat(toReturn.val)
+      }
       toReturn.val.sort(function(a, b) {
         var comp = {
           "DESPAIR": 3,
@@ -512,25 +535,8 @@ function defineSorter(a, b, type) {
     return a.identifier > b.identifier;
   }
   if (type == 'Q2_GENDER') {
-    if (a[type] == b[type]) {
-      return 0;
-    } else if (a[type] == 'Male') {
-      return 1;
-    } else if (b[type] == 'Male') {
-      return -1;
-    } else if (a[type] == 'Female') {
-      return 1;
-    } else if (b[type] == 'Female') {
-      return -1;
-    } else if (a[type] == 'Other') {
-      return 1;
-    } else if (b[type] == 'Other') {
-      return -1;
-    } else if (a[type] == "I'd rather not say") {
-      return 1;
-    } else {
-      return -1;
-    }
+    var gender = {'Male': 1, "Female": 2, "Other": 3, "I'd rather not say": 4}
+    return - gender[a[type]] + gender[b[type]]
   }
   if (type == 'Q1_GOING_OUT') {
     if (a[type] == b[type]) {
@@ -549,49 +555,9 @@ function defineSorter(a, b, type) {
     return parseInt(a[type]) - parseInt(b[type]);
   }
   if (type == 'Q4_COUNTRY') {
-    if (a[type] == b[type]) {
-      return 0;
-    } else if (a[type] == 'Canada') {
-      return 1;
-    } else if (b[type] == 'Canada') {
-      return -1;
-    } else if (a[type] == 'Denmark') {
-      return 1;
-    } else if (b[type] == 'Denmark') {
-      return -1;
-    } else if (a[type] == 'Germany') {
-      return 1;
-    } else if (b[type] == 'Germany') {
-      return -1;
-    } else if (a[type] == 'Ireland') {
-      return 1;
-    } else if (b[type] == 'Ireland') {
-      return -1;
-    } else if (a[type] == 'Japan') {
-      return 1;
-    } else if (b[type] == 'Japan') {
-      return -1;
-    } else if (a[type] == 'Mexico') {
-      return 1;
-    } else if (b[type] == 'Mexico') {
-      return -1;
-    } else if (a[type] == 'Netherlands') {
-      return 1;
-    } else if (b[type] == 'Netherlands') {
-      return -1;
-    } else if (a[type] == 'Scotland') {
-      return 1;
-    } else if (b[type] == 'Scotland') {
-      return -1;
-    } else if (a[type] == 'United Kingdom') {
-      return 1;
-    } else if (b[type] == 'United Kingdom') {
-      return -1;
-    } else if (a[type] == 'United States') {
-      return 1;
-    } else {
-      return -1;
-    }
+    if (a[type] == -1) return -1
+    if (b[type] == -1) return -1
+    return String(a[type]).localeCompare(String(b[type]))
   }
   return a[type] > b[type];
 }
@@ -789,11 +755,11 @@ function updateChart() {
       }
     });
   count.exit().remove();
-
   for (var j = 0; j < currArray.length; j++) {
     currArray[j].values.sort(function(a, b) {
       return defineSorter(a, b, sorter);
     });
+
     var ppl = chart1.selectAll(".people")
       .data(currArray[j].values, function(d) {
         return d.identifier;
