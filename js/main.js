@@ -460,6 +460,15 @@ function createStackedBars(dataset) {
             else if (d[key] === "JOY") return "#33cd5f";
             else return "#387ef5";
           })
+          currArray = [{'key': "JOY", 'values':[]}, {'key': 'MEH', 'values':[]}, {'key': 'DESPAIR', 'values':[]}, {'key' : -1, 'values':[]}]
+          fullDataset.forEach(function(d) {
+            currArray.forEach(function(bin) {
+              if (bin.key == d[key]) {
+                bin.values.push(d)
+              }
+            })
+          })
+          updateChart()
       })
 
     singleBar.merge(enteredBar).attr('x',
