@@ -290,7 +290,7 @@ yScale2 = d3.scaleLinear()
 xScale2 = d3.scaleLinear()
   .domain([0, 100])
   .range([0, 4 * width / 10])
-var xAxis2 = d3.axisBottom(xScale2).ticks(1);
+var xAxis2 = d3.axisBottom(xScale2).ticks(5);
 chart2.append('g')
   .attr('transform', 'translate(0,' + (9 * height / 10) + ')')
   .attr('class', 'x axis candy')
@@ -634,6 +634,7 @@ function defineColor(key) {
 }
 
 function chart2Legend() {
+  chart2.append("text").attr("x", (1000-width)/2).attr("y", height-30).attr("text-anchor","middle").text("Percent of Participants (%)");
   var data = ["Joy", "Meh", "Despair", "No Response"]
   var dataColor = [green,yellow,red,blue]
   chart2.selectAll("legend").data(dataColor).enter().append('rect')
