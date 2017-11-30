@@ -31,6 +31,8 @@ var fullDataset;
 var hide = .3;
 var map;
 
+var e = null;
+
 var personTooltip = d3.tip()
   .attr("class", "person tooltip d3-tip")
   .offset([-20, 0])
@@ -431,6 +433,7 @@ function createStackedBars(dataset) {
         mapUpdate(d.values);
       })
       .on("mouseout", function(d) {
+        console.log(e);
         d3.selectAll("rect.people").attr("opacity", function(d){
           if (e!=null) {
             if(e[0] < d3.select(this).attr('x') && e[1] > d3.select(this).attr('x')) {
