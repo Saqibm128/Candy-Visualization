@@ -78,7 +78,7 @@ var brush = d3.brushX()
   .on("end", function(d){
     d3.selectAll(".people").attr("opacity", hide)
     var toUpdate = []
-    var e = d3.event.selection;
+    e = d3.event.selection;
     if (e) {
       d.forEach(function(personData) {
         var personRect = d3.select("#id" + String(personData.identifier))
@@ -91,6 +91,7 @@ var brush = d3.brushX()
     } else {
       d3.selectAll(".people").attr("opacity", 1)
       createStackedBars(fullDataset)
+      e = null;
     }
   });
 svg.call(personTooltip)
@@ -431,11 +432,14 @@ function createStackedBars(dataset) {
       })
       .on("mouseout", function(d) {
         d3.selectAll("rect.people").attr("opacity", function(d){
-          if (e[0] < d3.select(this).attr('x') && e[1] > d3.select(this).attr('x')) {
-            return 1;
+          if (e!=null) {
+            if(e[0] < d3.select(this).attr('x') && e[1] > d3.select(this).attr('x')) {
+              return 1;
+            }
+            return hide;
           }
-          return hide;
-        }); //FIX HERE
+          return 1;
+        });
         candyTooltip.hide(d);
         mapUpdate(fullDataset);
       });
