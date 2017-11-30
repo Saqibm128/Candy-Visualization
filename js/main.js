@@ -343,9 +343,15 @@ function createStackedBars(dataset) {
       return toReturn;
     })
     .sort(function(a, b) {
-      if (a.val[0].key != "JOY") return 0 - b.val[0].values.length;
-      if (b.val[0].key != "JOY") return a.val[0].values.length;
-      return a.val[0].values.length - b.val[0].values.length;
+      var aLength = 0;
+      var bLength = 0;
+      a.val.forEach(function(d) {
+        if (d.key == "JOY") aLength = d.values.length;
+      })
+      b.val.forEach(function(d) {
+        if (d.key == "JOY") bLength = d.values.length;
+      })
+      return aLength - bLength;
     })
   console.log(candyArr)
 
