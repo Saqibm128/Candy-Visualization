@@ -12,6 +12,7 @@ var goingOut = [];
 var age = [];
 var country = [];
 var state = [];
+var lock;
 var stackG = chart2.append('g').attr("class", "chart2");
 var xScaleLabels = [];
 var yScale;
@@ -869,6 +870,8 @@ function updateChart() {
         return "id" + String(d.identifier)
       })
       .on("mouseover", function(d) {
+        if (lock) {
+        lock = false
         personTooltip.show(d);
         d3.selectAll('.people')
           .transition()
@@ -878,21 +881,40 @@ function updateChart() {
           .transition()
           .attr("width", rectWidth * 3)
           .attr("height", rectWidth * 3)
+        lock = true
+        }
       })
       .on("mouseout", function(d) {
+        personTooltip.hide(d)
+        if (lock) {
+        lock = false
         personTooltip.hide(d)
         d3.selectAll('.people')
           .transition()
           .attr("width", rectWidth)
           .attr("height", rectWidth)
-      });
-    ppl.merge(enteredPpl).transition().attr("x", function(d, i) {
+          lock = true
+        } else {
+          setTimeout(function() {
+            lock = false
+            d3.selectAll('.people')
+              .transition()
+              .attr("width", rectWidth)
+              .attr("height", rectWidth)
+              lock = true
+          }, 500)
+        }
+      })
+      .attr("width", (rectWidth))
+      .attr("height", (rectWidth));
+      lock = false
+      ppl.merge(enteredPpl).transition().attr("x", function(d, i) {
         return xScale(j) - binWidth / 2 + ((rectWidth + 2) * (i % num));
       })
       .attr("y", function(d, i) {
         return yScale(Math.floor(i / num));
-      })
-      .attr("width", (rectWidth))
-      .attr("height", (rectWidth));
+      });
+    lock = true;
+
   }
 }
