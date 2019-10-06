@@ -200,7 +200,7 @@ function mapUpdate(dataset) {
 function mapSetup(dataset) {
   d3.select("#map").selectAll("*").remove()
   map = d3.geomap.choropleth()
-    .geofile('/data/USA.json')
+    .geofile('./data/USA.json')
     .projection(d3.geo.albersUsa)
     .column('count')
     .unitId('fips')
